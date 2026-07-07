@@ -39,6 +39,14 @@ const COMPLIMENTS = [
   "Still the prettiest person in every room.",
 ];
 
+const SIMPLE_GREETINGS = {
+  lateNight: "Still up?",
+  morning: "Good morning",
+  afternoon: "Good afternoon",
+  evening: "Good evening",
+  night: "Good night",
+};
+
 function timeBlock(hour) {
   if (hour < 5) return "lateNight";
   if (hour < 12) return "morning";
@@ -68,4 +76,9 @@ export function parvaazGreeting(date = new Date()) {
     greeting: pick(GREETINGS[block], `${dateKey}-${block}-g`),
     compliment: pick(COMPLIMENTS, `${dateKey}-${block}-c`),
   };
+}
+
+// Plain time-of-day greeting, no compliments — used for Saurav's own profile.
+export function simpleGreeting(date = new Date()) {
+  return { greeting: SIMPLE_GREETINGS[timeBlock(date.getHours())], compliment: null };
 }

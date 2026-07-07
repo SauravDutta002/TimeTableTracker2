@@ -24,7 +24,7 @@ import ScheduleList from "./components/ScheduleList.jsx";
 import TogetherView from "./components/TogetherView.jsx";
 import BottomNav from "./components/BottomNav.jsx";
 import InstallPrompt from "./components/InstallPrompt.jsx";
-import { parvaazGreeting } from "./data/greetings.js";
+import { parvaazGreeting, simpleGreeting } from "./data/greetings.js";
 
 const REAL_TODAY = todayKey();
 const DEFAULT_DAY = DAYS.includes(REAL_TODAY) ? REAL_TODAY : "Mon";
@@ -44,7 +44,7 @@ export default function App() {
   const [now, setNow] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState(DEFAULT_DAY);
   const [activeTab, setActiveTab] = useState("today");
-  const [schedulePerson, setSchedulePerson] = useState("you");
+  const [viewer, setViewer] = useState("you");
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000);
@@ -87,7 +87,7 @@ export default function App() {
   );
 
   const dateLabel = now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
-  const { greeting, compliment } = parvaazGreeting(now);
+  const { greeting, compliment } = viewer === "friend" ? parvaazGreeting(now) : simpleGreeting(now);
 
   return (
     <div className="bg-ambient min-h-screen">
@@ -97,17 +97,22 @@ export default function App() {
             <h2 className="text-[20px] font-semibold leading-snug tracking-tight text-white">
               {greeting}
             </h2>
-            <p className="mt-0.5 text-[13px] font-medium leading-snug text-rose-300/80">{compliment}</p>
+            {compliment && (
+              <p className="mt-0.5 text-[13px] font-medium leading-snug text-rose-300/80">{compliment}</p>
+            )}
             <p className="mt-1.5 text-[12px] text-white/40">{dateLabel}</p>
           </div>
           <div className="flex shrink-0 -space-x-2">
             {Object.values(PEOPLE).map((p) => (
-              <span
+              <button
                 key={p.id}
-                className={`flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br text-[12px] font-semibold text-white ring-2 ring-black bg-clip-padding ${p.gradient}`}
+                onClick={() => setViewer(p.id)}
+                className={`press flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br text-[12px] font-semibold text-white ring-2 bg-clip-padding transition-shadow ${p.gradient} ${
+                  viewer === p.id ? "ring-white" : "ring-black"
+                }`}
               >
                 {p.initials}
-              </span>
+              </button>
             ))}
           </div>
         </header>
@@ -193,9 +198,9 @@ export default function App() {
 
         {activeTab === "schedule" && (
           <div key="schedule" className="animate-fade-up mt-5 flex flex-col gap-3">
-            <PersonToggle people={PEOPLE} active={schedulePerson} onChange={setSchedulePerson} />
+            <PersonToggle people={PEOPLE} active={viewer} onChange={setViewer} />
             <ScheduleList
-              person={PEOPLE[schedulePerson]}
+              person={PEOPLE[viewer]}
               day={selectedDay}
               isToday={isViewingToday}
               nowMin={nowMin}
