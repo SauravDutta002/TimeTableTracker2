@@ -28,7 +28,8 @@
       "Bash(rm -rf 'C:\\\\Users\\\\91745/AppData/Local/ms-playwright')",
       "Bash(pkill -f \"vite preview\")",
       "Bash(pkill -f \"port 4173\")",
-      "Bash(netstat -ano)"
+      "Bash(netstat -ano)",
+      "Bash(rm -f verify.cjs)"
     ],
     "additionalDirectories": [
       "C:\\Users\\91745\\AppData\\Local\\ms-playwright"

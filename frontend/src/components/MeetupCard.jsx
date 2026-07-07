@@ -1,3 +1,4 @@
+import { FaHeart } from "react-icons/fa6";
 import { minutesToLabel, durationLabel } from "../utils/schedule.js";
 
 export default function MeetupCard({ block, isToday, dayLabel }) {
@@ -20,9 +21,7 @@ export default function MeetupCard({ block, isToday, dayLabel }) {
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/30" />
           <span className="absolute inline-flex h-11 w-11 rounded-full bg-white/20" />
           <span className="relative flex h-7 w-7 items-center justify-center rounded-full bg-white">
-            <svg viewBox="0 0 24 24" className="h-4 w-4 fill-rose-500">
-              <path d="M12 21s-7.5-4.6-10-9.2C0.4 8.2 2.1 4 6 4c2.1 0 3.7 1.3 4.5 2.7C11.3 5.3 12.9 4 15 4c3.9 0 5.6 4.2 4 7.8C19.5 16.4 12 21 12 21z" />
-            </svg>
+            <FaHeart className="h-3.5 w-3.5 text-rose-500" />
           </span>
         </div>
         <div className="min-w-0">

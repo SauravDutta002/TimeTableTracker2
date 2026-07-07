@@ -5,12 +5,32 @@ export function timeToMinutes(time) {
   return h * 60 + m;
 }
 
+export function timeToSeconds(time) {
+  return timeToMinutes(time) * 60;
+}
+
+// "8h 03m 12s" / "3m 40s" / "27s" — always counts down to the second.
+export function countdownLabel(totalSeconds) {
+  const s = Math.max(0, Math.round(totalSeconds));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  if (h > 0) return `${h}h ${String(m).padStart(2, "0")}m ${String(sec).padStart(2, "0")}s`;
+  if (m > 0) return `${m}m ${String(sec).padStart(2, "0")}s`;
+  return `${sec}s`;
+}
+
 export function minutesToLabel(mins) {
   const h24 = Math.floor(mins / 60) % 24;
   const m = mins % 60;
   const h12 = h24 % 12 === 0 ? 12 : h24 % 12;
   const ampm = h24 < 12 ? "AM" : "PM";
   return `${h12}:${String(m).padStart(2, "0")} ${ampm}`;
+}
+
+export function courseNumber(subject) {
+  const match = subject?.match(/(\d+)\s*$/);
+  return match ? match[1] : subject;
 }
 
 export function durationLabel(mins) {
@@ -30,9 +50,14 @@ export function nowMinutes(date = new Date()) {
   return date.getHours() * 60 + date.getMinutes();
 }
 
-// Returns the slot (with type/subject) a person is in at a given day + minute offset,
+export function nowSeconds(date = new Date()) {
+  return date.getHours() * 3600 + date.getMinutes() * 60 + date.getSeconds();
+}
+
+// Returns the slot (with type/subject) a person is in at a given day + second offset,
 // along with period index and timing info. Returns an "off" status outside college hours.
-export function getStatusAt(person, day, minutes) {
+// `seconds` is seconds-since-midnight, so progress/left/toStart are second-precise.
+export function getStatusAt(person, day, seconds) {
   const daySchedule = person.schedule[day];
 
   if (!daySchedule) {
@@ -44,21 +69,21 @@ export function getStatusAt(person, day, minutes) {
     const slot = daySchedule[i];
     if (!slot) continue;
 
-    const start = timeToMinutes(period.start);
-    const end = timeToMinutes(period.end);
+    const start = timeToSeconds(period.start);
+    const end = timeToSeconds(period.end);
 
-    if (minutes >= start && minutes < end) {
-      const progress = (minutes - start) / (end - start);
+    if (seconds >= start && seconds < end) {
+      const progress = (seconds - start) / (end - start);
       return {
         type: slot.type,
         subject: slot.subject,
         room: slot.room,
         faculty: slot.faculty,
         periodIndex: i,
-        start,
-        end,
+        start: start / 60,
+        end: end / 60,
         progress,
-        minutesLeft: end - minutes,
+        secondsLeft: end - seconds,
       };
     }
   }
@@ -70,11 +95,10 @@ export function getStatusAt(person, day, minutes) {
     return { type: "off", label: "No College", periodIndex: -1 };
   }
 
-  const dayStart = timeToMinutes(PERIODS[firstSlotIdx].start);
-  const dayEnd = timeToMinutes(PERIODS[lastSlotIdx].end);
+  const dayStart = timeToSeconds(PERIODS[firstSlotIdx].start);
 
-  if (minutes < dayStart) {
-    return { type: "off", label: "Before College", periodIndex: -1, minutesToStart: dayStart - minutes };
+  if (seconds < dayStart) {
+    return { type: "off", label: "Before College", periodIndex: -1, secondsToStart: dayStart - seconds };
   }
   return { type: "off", label: "College Over", periodIndex: -1 };
 }

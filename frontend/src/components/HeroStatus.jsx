@@ -1,5 +1,5 @@
 import Swoosh from "./Swoosh.jsx";
-import { minutesToLabel, STATUS_META } from "../utils/schedule.js";
+import { minutesToLabel, countdownLabel, STATUS_META } from "../utils/schedule.js";
 
 export default function HeroStatus({ status, isToday, dayLabel }) {
   const meta = STATUS_META[status.type] ?? STATUS_META.off;
@@ -12,10 +12,8 @@ export default function HeroStatus({ status, isToday, dayLabel }) {
   if (status.start != null && status.end != null) {
     subtitleParts.push(`${minutesToLabel(status.start)} – ${minutesToLabel(status.end)}`);
   }
-  if (status.type === "off" && status.label) {
-    subtitleParts.push(
-      status.minutesToStart != null ? `${status.label} · starts in ${status.minutesToStart} min` : status.label
-    );
+  if (status.type === "off" && status.label && status.secondsToStart == null) {
+    subtitleParts.push(status.label);
   }
 
   return (
@@ -40,9 +38,18 @@ export default function HeroStatus({ status, isToday, dayLabel }) {
       </h1>
 
       <p className="mt-0.5 text-[15px] text-white/55">
-        {subtitleParts.length > 0 ? subtitleParts.join(" · ") : meta.label}
-        {isToday && status.type !== "off" && status.minutesLeft != null && (
-          <span className="text-white/40"> · {status.minutesLeft} min left</span>
+        {status.type === "off" && status.secondsToStart != null ? (
+          <span className="tabular-nums">
+            {subtitleParts.length > 0 && `${subtitleParts.join(" · ")} · `}
+            {status.label} · starts in {countdownLabel(status.secondsToStart)}
+          </span>
+        ) : (
+          <>
+            {subtitleParts.length > 0 ? subtitleParts.join(" · ") : meta.label}
+            {isToday && isBusy && status.secondsLeft != null && (
+              <span className="tabular-nums text-white/40"> · {countdownLabel(status.secondsLeft)} left</span>
+            )}
+          </>
         )}
       </p>
 

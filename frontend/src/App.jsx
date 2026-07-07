@@ -5,9 +5,12 @@ import {
   getMutualFreeBlocks,
   todayKey,
   nowMinutes,
-  timeToMinutes,
+  nowSeconds,
+  timeToSeconds,
   minutesToLabel,
   durationLabel,
+  countdownLabel,
+  courseNumber,
   STATUS_META,
 } from "./utils/schedule.js";
 
@@ -21,6 +24,7 @@ import ScheduleList from "./components/ScheduleList.jsx";
 import TogetherView from "./components/TogetherView.jsx";
 import BottomNav from "./components/BottomNav.jsx";
 import InstallPrompt from "./components/InstallPrompt.jsx";
+import { parvaazGreeting } from "./data/greetings.js";
 
 const REAL_TODAY = todayKey();
 const DEFAULT_DAY = DAYS.includes(REAL_TODAY) ? REAL_TODAY : "Mon";
@@ -36,14 +40,6 @@ function StatusRing({ status, id }) {
   );
 }
 
-function greeting(hour) {
-  if (hour < 5) return "Still up?";
-  if (hour < 12) return "Good morning";
-  if (hour < 17) return "Good afternoon";
-  if (hour < 21) return "Good evening";
-  return "Good night";
-}
-
 export default function App() {
   const [now, setNow] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState(DEFAULT_DAY);
@@ -51,23 +47,24 @@ export default function App() {
   const [schedulePerson, setSchedulePerson] = useState("you");
 
   useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 30000);
+    const id = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(id);
   }, []);
 
   const realToday = todayKey(now);
   const isViewingToday = selectedDay === realToday;
   const nowMin = nowMinutes(now);
+  const nowSec = nowSeconds(now);
 
-  const previewMinutes = useMemo(() => {
-    if (isViewingToday) return nowMin;
+  const previewSeconds = useMemo(() => {
+    if (isViewingToday) return nowSec;
     const daySchedule = PEOPLE.you.schedule[selectedDay];
     const firstIdx = daySchedule ? daySchedule.findIndex(Boolean) : -1;
-    return firstIdx === -1 ? timeToMinutes(PERIODS[0].start) : timeToMinutes(PERIODS[firstIdx].start);
-  }, [isViewingToday, nowMin, selectedDay]);
+    return firstIdx === -1 ? timeToSeconds(PERIODS[0].start) : timeToSeconds(PERIODS[firstIdx].start);
+  }, [isViewingToday, nowSec, selectedDay]);
 
-  const yourStatus = getStatusAt(PEOPLE.you, selectedDay, previewMinutes);
-  const friendStatus = getStatusAt(PEOPLE.friend, selectedDay, previewMinutes);
+  const yourStatus = getStatusAt(PEOPLE.you, selectedDay, previewSeconds);
+  const friendStatus = getStatusAt(PEOPLE.friend, selectedDay, previewSeconds);
 
   const mutualBlocks = useMemo(
     () => getMutualFreeBlocks(PEOPLE.you, PEOPLE.friend, selectedDay),
@@ -90,18 +87,20 @@ export default function App() {
   );
 
   const dateLabel = now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+  const { greeting, compliment } = parvaazGreeting(now);
 
   return (
     <div className="bg-ambient min-h-screen">
       <div className="safe-top mx-auto flex min-h-screen w-full max-w-md flex-col px-4 pb-28 pt-6">
-        <header className="mb-5 flex items-center justify-between">
-          <div>
-            <h2 className="text-[22px] font-semibold tracking-tight text-white">
-              {greeting(now.getHours())}
+        <header className="mb-5 flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h2 className="text-[20px] font-semibold leading-snug tracking-tight text-white">
+              {greeting}
             </h2>
-            <p className="text-[12px] text-white/40">{dateLabel}</p>
+            <p className="mt-0.5 text-[13px] font-medium leading-snug text-rose-300/80">{compliment}</p>
+            <p className="mt-1.5 text-[12px] text-white/40">{dateLabel}</p>
           </div>
-          <div className="flex -space-x-2">
+          <div className="flex shrink-0 -space-x-2">
             {Object.values(PEOPLE).map((p) => (
               <span
                 key={p.id}
@@ -133,11 +132,15 @@ export default function App() {
                 label={PEOPLE.friend.name}
                 value={(STATUS_META[friendStatus.type] ?? STATUS_META.off).label}
                 sub={
-                  friendStatus.type === "class" || friendStatus.type === "lab"
-                    ? friendStatus.subject
-                    : friendStatus.minutesToStart
-                    ? `In ${friendStatus.minutesToStart} min`
-                    : "Available"
+                  friendStatus.type === "class" || friendStatus.type === "lab" ? (
+                    <span className="mt-0.5 inline-flex items-center rounded-lg bg-white/20 px-2 py-0.5 text-[20px] font-bold leading-none text-white">
+                      {courseNumber(friendStatus.subject)}
+                    </span>
+                  ) : friendStatus.secondsToStart ? (
+                    <span className="tabular-nums">In {countdownLabel(friendStatus.secondsToStart)}</span>
+                  ) : (
+                    "Available"
+                  )
                 }
                 right={<StatusRing status={friendStatus} id="friend-ring" />}
               />
@@ -151,11 +154,15 @@ export default function App() {
                 label="Free To Meet"
                 value={freeNowBlock ? "Yes" : "No"}
                 sub={
-                  freeNowBlock
-                    ? `${freeNowBlock.end - nowMin} min left`
-                    : heroBlock
-                    ? `Next at ${minutesToLabel(heroBlock.start)}`
-                    : "Not today"
+                  freeNowBlock ? (
+                    <span className="tabular-nums">
+                      {countdownLabel(freeNowBlock.end * 60 - nowSec)} left
+                    </span>
+                  ) : heroBlock ? (
+                    `Next at ${minutesToLabel(heroBlock.start)}`
+                  ) : (
+                    "Not today"
+                  )
                 }
               />
 

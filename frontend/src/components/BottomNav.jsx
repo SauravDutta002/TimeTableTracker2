@@ -1,35 +1,16 @@
+import {
+  HiHome,
+  HiOutlineHome,
+  HiCalendarDays,
+  HiOutlineCalendarDays,
+  HiUserGroup,
+  HiOutlineUserGroup,
+} from "react-icons/hi2";
+
 const TABS = [
-  {
-    id: "today",
-    label: "Today",
-    icon: (active) => (
-      <svg viewBox="0 0 24 24" className="h-5 w-5" fill={active ? "white" : "none"} stroke="currentColor" strokeWidth="1.8">
-        <path d="M3 11.5 12 4l9 7.5" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M5 10v9a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-9" strokeLinecap="round" strokeLinejoin="round" />
-      </svg>
-    ),
-  },
-  {
-    id: "schedule",
-    label: "Schedule",
-    icon: (active) => (
-      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <rect x="3.5" y="5" width="17" height="15" rx="3" fill={active ? "white" : "none"} fillOpacity={active ? 0.15 : 0} />
-        <path d="M3.5 9.5h17M8 3v4M16 3v4" strokeLinecap="round" />
-      </svg>
-    ),
-  },
-  {
-    id: "together",
-    label: "Together",
-    icon: (active) => (
-      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
-        <circle cx="9" cy="8.5" r="3" fill={active ? "white" : "none"} fillOpacity={active ? 0.15 : 0} />
-        <circle cx="16" cy="9.5" r="2.6" />
-        <path d="M3 19.5c0-3 2.7-5 6-5s6 2 6 5M14 14.7c2.6.3 4.5 2 4.5 4.3" strokeLinecap="round" />
-      </svg>
-    ),
-  },
+  { id: "today", label: "Today", Icon: HiOutlineHome, IconActive: HiHome },
+  { id: "schedule", label: "Schedule", Icon: HiOutlineCalendarDays, IconActive: HiCalendarDays },
+  { id: "together", label: "Together", Icon: HiOutlineUserGroup, IconActive: HiUserGroup },
 ];
 
 export default function BottomNav({ active, onChange }) {
@@ -47,6 +28,7 @@ export default function BottomNav({ active, onChange }) {
         />
         {TABS.map((tab) => {
           const isActive = tab.id === active;
+          const Icon = isActive ? tab.IconActive : tab.Icon;
           return (
             <button
               key={tab.id}
@@ -55,7 +37,7 @@ export default function BottomNav({ active, onChange }) {
                 isActive ? "text-white" : "text-white/40"
               }`}
             >
-              {tab.icon(isActive)}
+              <Icon className="h-5 w-5" />
               {tab.label}
             </button>
           );
