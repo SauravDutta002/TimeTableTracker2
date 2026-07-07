@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(rm -f src/assets/vite.svg)",
+      "Bash(rmdir src/assets)",
+      "Bash(npm run *)",
+      "Bash(nohup npm run dev -- --port 5173 --strictPort)",
+      "Bash(disown)",
+      "Read(//c/Users/91745/AppData/Local/Temp/claude/c--Users-91745-Downloads-TimeTableTracker/8a11d639-9a02-49e1-b355-6c4eeadde0c2/scratchpad/**)",
+      "Skill(run)",
+      "Skill(run:*)",
+      "Bash(grep -Hm1 ^description: 'c:\\\\Users\\\\91745\\\\Downloads\\\\TimeTableTracker/.claude/skills/*/SKILL.md')",
+      "Bash(npx --yes playwright --version)",
+      "Bash(node -e \"require.resolve\\('playwright'\\)\")",
+      "Read(//c/Users/91745/AppData/Local/**)",
+      "Bash(npx playwright *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:5173/)",
+      "Bash(node \"C:\\\\Users\\\\91745\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-91745-Downloads-TimeTableTracker\\\\8a11d639-9a02-49e1-b355-6c4eeadde0c2\\\\scratchpad\\\\verify.cjs\")",
+      "Bash(cp \"C:\\\\Users\\\\91745\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-91745-Downloads-TimeTableTracker\\\\8a11d639-9a02-49e1-b355-6c4eeadde0c2\\\\scratchpad\\\\verify.cjs\" \"c:\\\\Users\\\\91745\\\\Downloads\\\\TimeTableTracker\\\\frontend\\\\verify.cjs\")",
+      "Bash(node verify.cjs)",
+      "Bash(node verify2.cjs)",
+      "Bash(rm -f verify.cjs verify2.cjs)",
+      "Bash(npm uninstall *)",
+      "Bash(node scripts/generate-icons.cjs)",
+      "Bash(node verify-pwa.cjs)",
+      "Bash(rm -f verify.cjs verify-pwa.cjs)",
+      "Bash(rm -rf 'C:\\\\Users\\\\91745/AppData/Local/ms-playwright')",
+      "Bash(pkill -f \"vite preview\")",
+      "Bash(pkill -f \"port 4173\")",
+      "Bash(netstat -ano)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\91745\\AppData\\Local\\ms-playwright"
+    ]
+  }
+}

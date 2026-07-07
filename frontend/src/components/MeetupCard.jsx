@@ -1,0 +1,40 @@
+import { minutesToLabel, durationLabel } from "../utils/schedule.js";
+
+export default function MeetupCard({ block, isToday, dayLabel }) {
+  if (!block) {
+    return (
+      <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-zinc-800 to-zinc-900 p-5 ring-1 ring-white/10">
+        <p className="text-[15px] font-medium text-white/70">
+          No overlapping free time {isToday ? "left today" : `on ${dayLabel}`}.
+        </p>
+        <p className="mt-1 text-[13px] text-white/40">Try checking another day.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative overflow-hidden rounded-[28px] bg-gradient-to-br from-rose-500 via-pink-500 to-fuchsia-600 p-5 shadow-xl shadow-rose-500/20 ring-1 ring-white/10">
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/10 to-transparent opacity-60" />
+      <div className="relative z-10 flex items-center gap-4">
+        <div className="relative flex h-16 w-16 shrink-0 items-center justify-center">
+          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/30" />
+          <span className="absolute inline-flex h-11 w-11 rounded-full bg-white/20" />
+          <span className="relative flex h-7 w-7 items-center justify-center rounded-full bg-white">
+            <svg viewBox="0 0 24 24" className="h-4 w-4 fill-rose-500">
+              <path d="M12 21s-7.5-4.6-10-9.2C0.4 8.2 2.1 4 6 4c2.1 0 3.7 1.3 4.5 2.7C11.3 5.3 12.9 4 15 4c3.9 0 5.6 4.2 4 7.8C19.5 16.4 12 21 12 21z" />
+            </svg>
+          </span>
+        </div>
+        <div className="min-w-0">
+          <p className="text-[13px] font-medium text-white/80">
+            {block.isLunch ? "Lunch overlap" : isToday ? "You're both free" : `Free on ${dayLabel}`}
+          </p>
+          <p className="truncate text-[22px] font-semibold leading-tight text-white">
+            {minutesToLabel(block.start)} – {minutesToLabel(block.end)}
+          </p>
+          <p className="text-[13px] text-white/75">{durationLabel(block.duration)} · go meet up</p>
+        </div>
+      </div>
+    </div>
+  );
+}

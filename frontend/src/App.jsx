@@ -1,0 +1,214 @@
+import { useEffect, useMemo, useState } from "react";
+import { DAYS, PEOPLE, PERIODS } from "./data/timetable.js";
+import {
+  getStatusAt,
+  getMutualFreeBlocks,
+  todayKey,
+  nowMinutes,
+  timeToMinutes,
+  minutesToLabel,
+  durationLabel,
+  STATUS_META,
+} from "./utils/schedule.js";
+
+import DaySelector from "./components/DaySelector.jsx";
+import HeroStatus from "./components/HeroStatus.jsx";
+import StatCard from "./components/StatCard.jsx";
+import RingProgress from "./components/RingProgress.jsx";
+import MeetupCard from "./components/MeetupCard.jsx";
+import PersonToggle from "./components/PersonToggle.jsx";
+import ScheduleList from "./components/ScheduleList.jsx";
+import TogetherView from "./components/TogetherView.jsx";
+import BottomNav from "./components/BottomNav.jsx";
+import InstallPrompt from "./components/InstallPrompt.jsx";
+
+const REAL_TODAY = todayKey();
+const DEFAULT_DAY = DAYS.includes(REAL_TODAY) ? REAL_TODAY : "Mon";
+
+function StatusRing({ status, id }) {
+  const isBusy = status.type === "class" || status.type === "lab";
+  return (
+    <RingProgress progress={isBusy ? status.progress : 1} size={44} stroke={4} id={id}>
+      <span className="text-[10px] font-semibold text-white">
+        {isBusy ? `${Math.round(status.progress * 100)}%` : "🤝"}
+      </span>
+    </RingProgress>
+  );
+}
+
+function greeting(hour) {
+  if (hour < 5) return "Still up?";
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  if (hour < 21) return "Good evening";
+  return "Good night";
+}
+
+export default function App() {
+  const [now, setNow] = useState(new Date());
+  const [selectedDay, setSelectedDay] = useState(DEFAULT_DAY);
+  const [activeTab, setActiveTab] = useState("today");
+  const [schedulePerson, setSchedulePerson] = useState("you");
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 30000);
+    return () => clearInterval(id);
+  }, []);
+
+  const realToday = todayKey(now);
+  const isViewingToday = selectedDay === realToday;
+  const nowMin = nowMinutes(now);
+
+  const previewMinutes = useMemo(() => {
+    if (isViewingToday) return nowMin;
+    const daySchedule = PEOPLE.you.schedule[selectedDay];
+    const firstIdx = daySchedule ? daySchedule.findIndex(Boolean) : -1;
+    return firstIdx === -1 ? timeToMinutes(PERIODS[0].start) : timeToMinutes(PERIODS[firstIdx].start);
+  }, [isViewingToday, nowMin, selectedDay]);
+
+  const yourStatus = getStatusAt(PEOPLE.you, selectedDay, previewMinutes);
+  const friendStatus = getStatusAt(PEOPLE.friend, selectedDay, previewMinutes);
+
+  const mutualBlocks = useMemo(
+    () => getMutualFreeBlocks(PEOPLE.you, PEOPLE.friend, selectedDay),
+    [selectedDay]
+  );
+
+  const upcomingBlocks = isViewingToday
+    ? mutualBlocks.filter((b) => b.end > nowMin)
+    : mutualBlocks;
+
+  const freeNowBlock = isViewingToday
+    ? mutualBlocks.find((b) => nowMin >= b.start && nowMin < b.end)
+    : null;
+
+  const heroBlock = freeNowBlock ?? upcomingBlocks[0] ?? null;
+  const totalFreeMinutes = upcomingBlocks.reduce((sum, b) => sum + b.duration, 0);
+  const longestBlock = upcomingBlocks.reduce(
+    (max, b) => (b.duration > (max?.duration ?? 0) ? b : max),
+    null
+  );
+
+  const dateLabel = now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+
+  return (
+    <div className="bg-ambient min-h-screen">
+      <div className="safe-top mx-auto flex min-h-screen w-full max-w-md flex-col px-4 pb-28 pt-6">
+        <header className="mb-5 flex items-center justify-between">
+          <div>
+            <h2 className="text-[22px] font-semibold tracking-tight text-white">
+              {greeting(now.getHours())}
+            </h2>
+            <p className="text-[12px] text-white/40">{dateLabel}</p>
+          </div>
+          <div className="flex -space-x-2">
+            {Object.values(PEOPLE).map((p) => (
+              <span
+                key={p.id}
+                className={`flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br text-[12px] font-semibold text-white ring-2 ring-black bg-clip-padding ${p.gradient}`}
+              >
+                {p.initials}
+              </span>
+            ))}
+          </div>
+        </header>
+
+        <InstallPrompt />
+
+        <DaySelector selectedDay={selectedDay} todayKey={realToday} onSelect={setSelectedDay} />
+
+        {activeTab === "today" && (
+          <div key="today" className="animate-fade-up mt-5 flex flex-col gap-3">
+            <div className="rounded-[28px] bg-gradient-to-b from-white/[0.08] to-white/[0.02] p-4 ring-1 ring-white/[0.06]">
+              <HeroStatus
+                status={yourStatus}
+                isToday={isViewingToday}
+                dayLabel={`${selectedDay} schedule`}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <StatCard
+                gradient={PEOPLE.friend.gradient}
+                label={PEOPLE.friend.name}
+                value={(STATUS_META[friendStatus.type] ?? STATUS_META.off).label}
+                sub={
+                  friendStatus.type === "class" || friendStatus.type === "lab"
+                    ? friendStatus.subject
+                    : friendStatus.minutesToStart
+                    ? `In ${friendStatus.minutesToStart} min`
+                    : "Available"
+                }
+                right={<StatusRing status={friendStatus} id="friend-ring" />}
+              />
+
+              <StatCard
+                gradient={
+                  freeNowBlock
+                    ? "from-emerald-500 via-teal-500 to-emerald-600"
+                    : "from-zinc-700 to-zinc-800"
+                }
+                label="Free To Meet"
+                value={freeNowBlock ? "Yes" : "No"}
+                sub={
+                  freeNowBlock
+                    ? `${freeNowBlock.end - nowMin} min left`
+                    : heroBlock
+                    ? `Next at ${minutesToLabel(heroBlock.start)}`
+                    : "Not today"
+                }
+              />
+
+              <StatCard
+                gradient="from-violet-500 via-purple-500 to-indigo-600"
+                label="Free Windows"
+                value={upcomingBlocks.length}
+                unit={isViewingToday ? "left today" : "today"}
+                sub={`${durationLabel(totalFreeMinutes)} total`}
+              />
+
+              <StatCard
+                gradient="from-amber-500 via-orange-500 to-rose-500"
+                label="Longest Window"
+                value={longestBlock ? durationLabel(longestBlock.duration).split(" ")[0] : "–"}
+                unit={longestBlock ? durationLabel(longestBlock.duration).split(" ")[1] : ""}
+                sub={longestBlock ? `Starts ${minutesToLabel(longestBlock.start)}` : "None left"}
+              />
+            </div>
+
+            <MeetupCard
+              block={heroBlock}
+              isToday={isViewingToday}
+              dayLabel={selectedDay}
+            />
+          </div>
+        )}
+
+        {activeTab === "schedule" && (
+          <div key="schedule" className="animate-fade-up mt-5 flex flex-col gap-3">
+            <PersonToggle people={PEOPLE} active={schedulePerson} onChange={setSchedulePerson} />
+            <ScheduleList
+              person={PEOPLE[schedulePerson]}
+              day={selectedDay}
+              isToday={isViewingToday}
+              nowMin={nowMin}
+            />
+          </div>
+        )}
+
+        {activeTab === "together" && (
+          <div key="together" className="animate-fade-up mt-5">
+            <TogetherView
+              you={PEOPLE.you}
+              friend={PEOPLE.friend}
+              todayKey={realToday}
+              nowMin={nowMin}
+            />
+          </div>
+        )}
+      </div>
+
+      <BottomNav active={activeTab} onChange={setActiveTab} />
+    </div>
+  );
+}
