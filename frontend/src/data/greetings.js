@@ -31,6 +31,8 @@ const GREETINGS = {
 };
 
 const COMPLIMENTS = [
+  "You are beautiful.",
+  "You are gorgeous.",
   "You're beautiful, inside and out.",
   "You're the best thing that's happened to me.",
   "Smart, kind, and absolutely stunning.",
@@ -67,14 +69,57 @@ function pick(pool, seed) {
   return pool[hashString(seed) % pool.length];
 }
 
+let currentCompliment = null;
+
+function initParvaazGreeting() {
+  if (typeof window === 'undefined' || !window.localStorage) return;
+
+  const identity = localStorage.getItem("user_identity");
+  if (identity !== "friend") return; // Only track for Parvaaz
+
+  const nowTime = Date.now();
+  let count = parseInt(localStorage.getItem('parvaaz_refresh_count') || '0', 10);
+  let angaaaStart = parseInt(localStorage.getItem('parvaaz_angaaa_start') || '0', 10);
+
+  if (angaaaStart > 0) {
+    if (nowTime - angaaaStart < 2 * 60 * 1000) { // 2 minutes window
+      currentCompliment = "angaaa";
+      return;
+    } else {
+      count = 0;
+      localStorage.removeItem('parvaaz_angaaa_start');
+    }
+  }
+
+  // Pick a random compliment for this refresh
+  currentCompliment = COMPLIMENTS[Math.floor(Math.random() * COMPLIMENTS.length)];
+  count++;
+
+  if (count >= 5) {
+    localStorage.setItem('parvaaz_angaaa_start', nowTime.toString());
+    localStorage.setItem('parvaaz_refresh_count', '0');
+  } else {
+    localStorage.setItem('parvaaz_refresh_count', count.toString());
+  }
+}
+
+// Run once when the module is loaded (on page refresh)
+initParvaazGreeting();
+
 // Returns { greeting, compliment } — stable for a given date + hour block,
 // varies from day to day.
 export function parvaazGreeting(date = new Date()) {
   const block = timeBlock(date.getHours());
   const dateKey = date.toDateString();
+  
+  let comp = currentCompliment;
+  if (!comp) {
+    comp = pick(COMPLIMENTS, `${dateKey}-${block}-c`);
+  }
+
   return {
     greeting: pick(GREETINGS[block], `${dateKey}-${block}-g`),
-    compliment: pick(COMPLIMENTS, `${dateKey}-${block}-c`),
+    compliment: comp,
   };
 }
 
