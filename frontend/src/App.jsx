@@ -154,7 +154,7 @@ export default function App() {
                 sub={
                   secondaryStatus.type === "class" || secondaryStatus.type === "lab" ? (
                     <span className="mt-0.5 inline-flex items-center rounded-lg bg-white/20 px-2 py-0.5 text-[20px] font-bold leading-none text-white">
-                      {courseNumber(secondaryStatus.subject)}
+                      {secondaryStatus.room ? secondaryStatus.room.replace("Block-", "") : courseNumber(secondaryStatus.subject)}
                     </span>
                   ) : secondaryStatus.secondsToStart ? (
                     <span className="tabular-nums">In {countdownLabel(secondaryStatus.secondsToStart)}</span>
