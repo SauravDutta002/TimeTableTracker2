@@ -24,6 +24,7 @@ import ScheduleList from "./components/ScheduleList.jsx";
 import TogetherView from "./components/TogetherView.jsx";
 import BottomNav from "./components/BottomNav.jsx";
 import InstallPrompt from "./components/InstallPrompt.jsx";
+import OTPModal from "./components/OTPModal.jsx";
 import { parvaazGreeting, simpleGreeting } from "./data/greetings.js";
 
 const REAL_TODAY = todayKey();
@@ -44,7 +45,8 @@ export default function App() {
   const [now, setNow] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState(DEFAULT_DAY);
   const [activeTab, setActiveTab] = useState("today");
-  const [viewer, setViewer] = useState("you");
+  const [hasIdentified, setHasIdentified] = useState(() => localStorage.getItem("user_identity") !== null);
+  const [viewer, setViewer] = useState(() => localStorage.getItem("user_identity") || "you");
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000);
@@ -58,13 +60,16 @@ export default function App() {
 
   const previewSeconds = useMemo(() => {
     if (isViewingToday) return nowSec;
-    const daySchedule = PEOPLE.you.schedule[selectedDay];
+    const daySchedule = PEOPLE[viewer].schedule[selectedDay];
     const firstIdx = daySchedule ? daySchedule.findIndex(Boolean) : -1;
     return firstIdx === -1 ? timeToSeconds(PERIODS[0].start) : timeToSeconds(PERIODS[firstIdx].start);
-  }, [isViewingToday, nowSec, selectedDay]);
+  }, [isViewingToday, nowSec, selectedDay, viewer]);
 
-  const yourStatus = getStatusAt(PEOPLE.you, selectedDay, previewSeconds);
-  const friendStatus = getStatusAt(PEOPLE.friend, selectedDay, previewSeconds);
+  const primaryPerson = PEOPLE[viewer];
+  const secondaryPerson = viewer === "you" ? PEOPLE.friend : PEOPLE.you;
+
+  const primaryStatus = getStatusAt(primaryPerson, selectedDay, previewSeconds);
+  const secondaryStatus = getStatusAt(secondaryPerson, selectedDay, previewSeconds);
 
   const mutualBlocks = useMemo(
     () => getMutualFreeBlocks(PEOPLE.you, PEOPLE.friend, selectedDay),
@@ -90,8 +95,18 @@ export default function App() {
   const { greeting, compliment } = viewer === "friend" ? parvaazGreeting(now) : simpleGreeting(now);
 
   return (
-    <div className="bg-ambient min-h-screen">
-      <div className="safe-top mx-auto flex min-h-screen w-full max-w-md flex-col px-4 pb-28 pt-6">
+    <>
+      {!hasIdentified && (
+        <OTPModal
+          onComplete={(identity) => {
+            localStorage.setItem("user_identity", identity);
+            setViewer(identity);
+            setHasIdentified(true);
+          }}
+        />
+      )}
+      <div className="bg-ambient min-h-screen">
+        <div className="safe-top mx-auto flex min-h-screen w-full max-w-md flex-col px-4 pb-28 pt-6">
         <header className="mb-5 flex items-start justify-between gap-3">
           <div className="min-w-0">
             <h2 className="text-[20px] font-semibold leading-snug tracking-tight text-white">
@@ -125,7 +140,7 @@ export default function App() {
           <div key="today" className="animate-fade-up mt-5 flex flex-col gap-3">
             <div className="rounded-[28px] bg-gradient-to-b from-white/[0.08] to-white/[0.02] p-4 ring-1 ring-white/[0.06]">
               <HeroStatus
-                status={yourStatus}
+                status={primaryStatus}
                 isToday={isViewingToday}
                 dayLabel={`${selectedDay} schedule`}
               />
@@ -133,21 +148,21 @@ export default function App() {
 
             <div className="grid grid-cols-2 gap-3">
               <StatCard
-                gradient={PEOPLE.friend.gradient}
-                label={PEOPLE.friend.name}
-                value={(STATUS_META[friendStatus.type] ?? STATUS_META.off).label}
+                gradient={secondaryPerson.gradient}
+                label={secondaryPerson.name}
+                value={(STATUS_META[secondaryStatus.type] ?? STATUS_META.off).label}
                 sub={
-                  friendStatus.type === "class" || friendStatus.type === "lab" ? (
+                  secondaryStatus.type === "class" || secondaryStatus.type === "lab" ? (
                     <span className="mt-0.5 inline-flex items-center rounded-lg bg-white/20 px-2 py-0.5 text-[20px] font-bold leading-none text-white">
-                      {courseNumber(friendStatus.subject)}
+                      {courseNumber(secondaryStatus.subject)}
                     </span>
-                  ) : friendStatus.secondsToStart ? (
-                    <span className="tabular-nums">In {countdownLabel(friendStatus.secondsToStart)}</span>
+                  ) : secondaryStatus.secondsToStart ? (
+                    <span className="tabular-nums">In {countdownLabel(secondaryStatus.secondsToStart)}</span>
                   ) : (
                     "Available"
                   )
                 }
-                right={<StatusRing status={friendStatus} id="friend-ring" />}
+                right={<StatusRing status={secondaryStatus} id="secondary-ring" />}
               />
 
               <StatCard
@@ -222,5 +237,6 @@ export default function App() {
 
       <BottomNav active={activeTab} onChange={setActiveTab} />
     </div>
+    </>
   );
 }
