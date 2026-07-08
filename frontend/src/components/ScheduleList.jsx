@@ -1,5 +1,5 @@
 import { PERIODS } from "../data/timetable.js";
-import { minutesToLabel, timeToMinutes, STATUS_META } from "../utils/schedule.js";
+import { minutesToLabel, timeToMinutes, STATUS_META, getSubjectName } from "../utils/schedule.js";
 
 const TYPE_BAR = {
   class: "bg-rose-400",
@@ -51,7 +51,7 @@ export default function ScheduleList({ person, day, isToday, nowMin }) {
               {minutesToLabel(start)}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[15px] font-medium text-white">{slot.subject}</p>
+              <p className="truncate text-[15px] font-medium text-white">{getSubjectName(slot.subject)}</p>
               <p className="truncate text-[12px] text-white/40">
                 {slot.faculty
                   ? `${slot.faculty}${slot.room ? ` · ${slot.room}` : ""}`

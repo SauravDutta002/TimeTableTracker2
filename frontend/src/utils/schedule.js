@@ -1,5 +1,22 @@
 import { PERIODS, DAYS } from "../data/timetable.js";
 
+export const SUBJECT_MAP = {
+  "24CSH-301": "Project Based Learning in Java",
+  "24CSH-310": "Advanced C Programming",
+  "24CSI-305": "Institute/Industrial Summer Training",
+  "24CSP-304": "Full Stack Development - II",
+  "24CSP-305": "Competitive Coding-II",
+  "24CST-302": "Computer Networks",
+  "24CST-331": "Big Data Fundamentals",
+  "24SMT-341": "Probability and Statistics",
+  "24TDP-311": "Soft Skills-III",
+  "24TDT-312": "Aptitude-III",
+};
+
+export function getSubjectName(subject) {
+  return SUBJECT_MAP[subject] || subject;
+}
+
 export function timeToMinutes(time) {
   const [h, m] = time.split(":").map(Number);
   return h * 60 + m;

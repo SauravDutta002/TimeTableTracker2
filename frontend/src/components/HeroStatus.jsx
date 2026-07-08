@@ -1,11 +1,11 @@
 import Swoosh from "./Swoosh.jsx";
-import { minutesToLabel, countdownLabel, STATUS_META } from "../utils/schedule.js";
+import { minutesToLabel, countdownLabel, STATUS_META, getSubjectName } from "../utils/schedule.js";
 
 export default function HeroStatus({ status, isToday, dayLabel }) {
   const meta = STATUS_META[status.type] ?? STATUS_META.off;
   const isBusy = status.type === "class" || status.type === "lab";
 
-  const headline = isBusy ? status.subject : meta.label;
+  const headline = isBusy ? getSubjectName(status.subject) : meta.label;
   const subtitleParts = [];
   if (isBusy && status.faculty) subtitleParts.push(`By ${status.faculty}`);
   if (status.room) subtitleParts.push(status.room);
