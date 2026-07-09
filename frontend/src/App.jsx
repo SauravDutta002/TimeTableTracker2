@@ -143,6 +143,7 @@ export default function App() {
                 status={primaryStatus}
                 isToday={isViewingToday}
                 dayLabel={`${selectedDay} schedule`}
+                showMascot={viewer === "friend"}
               />
             </div>
 

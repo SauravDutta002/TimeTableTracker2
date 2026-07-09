@@ -1,7 +1,8 @@
 import Swoosh from "./Swoosh.jsx";
+import CuteMascot from "./CuteMascot.jsx";
 import { minutesToLabel, countdownLabel, STATUS_META, getSubjectName } from "../utils/schedule.js";
 
-export default function HeroStatus({ status, isToday, dayLabel }) {
+export default function HeroStatus({ status, isToday, dayLabel, showMascot }) {
   const meta = STATUS_META[status.type] ?? STATUS_META.off;
   const isBusy = status.type === "class" || status.type === "lab";
 
@@ -33,25 +34,35 @@ export default function HeroStatus({ status, isToday, dayLabel }) {
         )}
       </div>
 
-      <h1 className="mt-1 truncate text-[34px] font-semibold leading-tight tracking-tight text-white">
-        {headline}
-      </h1>
+      <div className="flex items-center justify-between">
+        <div className="min-w-0">
+          <h1 className="mt-1 truncate text-[34px] font-semibold leading-tight tracking-tight text-white">
+            {headline}
+          </h1>
 
-      <p className="mt-0.5 text-[15px] text-white/55">
-        {status.type === "off" && status.secondsToStart != null ? (
-          <span className="tabular-nums">
-            {subtitleParts.length > 0 && `${subtitleParts.join(" · ")} · `}
-            {status.label} · starts in {countdownLabel(status.secondsToStart)}
-          </span>
-        ) : (
-          <>
-            {subtitleParts.length > 0 ? subtitleParts.join(" · ") : meta.label}
-            {isToday && isBusy && status.secondsLeft != null && (
-              <span className="tabular-nums text-white/40"> · {countdownLabel(status.secondsLeft)} left</span>
+          <p className="mt-0.5 text-[15px] text-white/55">
+            {status.type === "off" && status.secondsToStart != null ? (
+              <span className="tabular-nums">
+                {subtitleParts.length > 0 && `${subtitleParts.join(" · ")} · `}
+                {status.label} · starts in {countdownLabel(status.secondsToStart)}
+              </span>
+            ) : (
+              <>
+                {subtitleParts.length > 0 ? subtitleParts.join(" · ") : meta.label}
+                {isToday && isBusy && status.secondsLeft != null && (
+                  <span className="tabular-nums text-white/40"> · {countdownLabel(status.secondsLeft)} left</span>
+                )}
+              </>
             )}
-          </>
+          </p>
+        </div>
+
+        {showMascot && (
+          <div className="shrink-0 pl-3">
+            <CuteMascot type={status.type} color={meta.color} />
+          </div>
         )}
-      </p>
+      </div>
 
       <div className="mt-3">
         <Swoosh progress={status.progress ?? (isBusy ? 0 : 1)} color={meta.color} />
