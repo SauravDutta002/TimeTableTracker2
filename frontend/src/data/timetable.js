@@ -45,7 +45,7 @@ export const PEOPLE = {
         FREE,
         lab("24CSH-310", "Rahul Durgapal", "Block-B3-508"),
         lab("24CSH-310", "Rahul Durgapal", "Block-B3-508"),
-        cls("24CST-331", "Nongmeikapam Thoiba Singh", "Block-B3-303"),
+        cls("24CST-331", "Thoiba", "Block-B3-303"),
       ],
       Tue: [
         lab("24CSP-304", "Megha Sharma", "Block-B3-403-A"),
