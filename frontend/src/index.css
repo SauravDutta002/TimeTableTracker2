@@ -1,8 +1,9 @@
-@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap");
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Nunito", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Playfair Display", ui-serif, Georgia, serif;
 }
 
 html,
@@ -13,9 +14,9 @@ body,
 
 body {
   margin: 0;
-  background: #000000;
-  color: #ffffff;
-  font-family: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  background: #F4F1EA;
+  color: #2C3628;
+  font-family: "Nunito", ui-sans-serif, system-ui, sans-serif;
   -webkit-tap-highlight-color: transparent;
   overscroll-behavior-y: none;
 }
@@ -37,9 +38,10 @@ body {
 }
 
 .glass-card {
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02));
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.4));
+  border: 1px solid rgba(255, 255, 255, 0.6);
   backdrop-filter: blur(20px);
+  box-shadow: 0 4px 20px rgba(44, 54, 40, 0.05);
 }
 
 .safe-top {
@@ -115,9 +117,8 @@ body {
 }
 
 .bg-ambient {
-  background:
-    radial-gradient(480px circle at 12% 0%, rgba(244, 63, 94, 0.16), transparent 60%),
-    radial-gradient(420px circle at 100% 18%, rgba(14, 165, 233, 0.14), transparent 55%),
-    radial-gradient(520px circle at 50% 100%, rgba(168, 85, 247, 0.1), transparent 60%),
-    #000000;
+  background: 
+    radial-gradient(100vw circle at 50% 0%, #FAF8F2, transparent 60%),
+    radial-gradient(120vw circle at 100% 100%, #E9E6D9, transparent 80%),
+    #F4F1EA;
 }

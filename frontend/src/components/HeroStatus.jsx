@@ -1,5 +1,4 @@
 import Swoosh from "./Swoosh.jsx";
-import CuteMascot from "./CuteMascot.jsx";
 import { minutesToLabel, countdownLabel, STATUS_META, getSubjectName } from "../utils/schedule.js";
 
 export default function HeroStatus({ status, isToday, dayLabel, showMascot }) {
@@ -20,14 +19,14 @@ export default function HeroStatus({ status, isToday, dayLabel, showMascot }) {
   return (
     <div className="px-1 pt-2">
       <div className="flex items-center justify-between">
-        <span className="text-sm font-medium text-white/50">
+        <span className="text-sm font-medium text-emerald-900/60">
           {isToday ? "Right now" : dayLabel}
         </span>
         {isToday && (
-          <span className="flex items-center gap-1.5 text-[11px] font-medium text-white/50">
+          <span className="flex items-center gap-1.5 text-[11px] font-medium text-emerald-900/60">
             <span className="relative flex h-1.5 w-1.5">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75" />
-              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-rose-400" />
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#FF9187] opacity-75" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#FF9187]" />
             </span>
             LIVE
           </span>
@@ -36,11 +35,11 @@ export default function HeroStatus({ status, isToday, dayLabel, showMascot }) {
 
       <div className="flex items-center justify-between">
         <div className="min-w-0">
-          <h1 className="mt-1 truncate text-[34px] font-semibold leading-tight tracking-tight text-white">
+          <h1 className="mt-1 truncate text-[36px] font-serif font-bold leading-tight tracking-tight text-emerald-950">
             {headline}
           </h1>
 
-          <p className="mt-0.5 text-[15px] text-white/55">
+          <p className="mt-0.5 text-[15px] text-emerald-950/70 font-medium">
             {status.type === "off" && status.secondsToStart != null ? (
               <span className="tabular-nums">
                 {subtitleParts.length > 0 && `${subtitleParts.join(" · ")} · `}
@@ -50,18 +49,12 @@ export default function HeroStatus({ status, isToday, dayLabel, showMascot }) {
               <>
                 {subtitleParts.length > 0 ? subtitleParts.join(" · ") : meta.label}
                 {isToday && isBusy && status.secondsLeft != null && (
-                  <span className="tabular-nums text-white/40"> · {countdownLabel(status.secondsLeft)} left</span>
+                  <span className="tabular-nums text-emerald-900/50"> · {countdownLabel(status.secondsLeft)} left</span>
                 )}
               </>
             )}
           </p>
-        </div>
-
-        {showMascot && (
-          <div className="shrink-0 pl-3">
-            <CuteMascot type={status.type} color={meta.color} />
-          </div>
-        )}
+      </div>
       </div>
 
       <div className="mt-3">

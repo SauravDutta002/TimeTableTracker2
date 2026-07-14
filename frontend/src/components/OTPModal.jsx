@@ -17,9 +17,9 @@ export default function OTPModal({ onComplete }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-      <div className="w-full max-w-sm rounded-[32px] bg-zinc-900 p-6 ring-1 ring-white/10">
-        <h2 className="mb-2 text-2xl font-semibold text-white">Welcome!</h2>
-        <p className="mb-6 text-sm text-white/60">
+      <div className="w-full max-w-sm rounded-[32px] bg-[#FAF8F2] p-6 ring-1 ring-emerald-900/10 shadow-xl">
+        <h2 className="mb-2 text-2xl font-serif font-bold text-emerald-950">Welcome!</h2>
+        <p className="mb-6 text-sm text-emerald-950/60">
           Enter OTP if you are Parvaaz, or just continue if you are Saurav.
         </p>
 
@@ -33,8 +33,8 @@ export default function OTPModal({ onComplete }) {
                 setOtp(e.target.value);
                 setError(false);
               }}
-              className={`w-full rounded-2xl bg-white/5 px-4 py-3 text-white outline-none transition-all focus:bg-white/10 focus:ring-2 ${
-                error ? "ring-2 ring-rose-500" : "focus:ring-white/20"
+              className={`w-full rounded-2xl bg-emerald-900/5 px-4 py-3 text-emerald-950 outline-none transition-all focus:bg-emerald-900/10 focus:ring-2 ${
+                error ? "ring-2 ring-rose-500" : "focus:ring-emerald-900/20"
               }`}
             />
             {error && <p className="mt-2 text-xs text-rose-400">Incorrect OTP.</p>}
@@ -44,13 +44,13 @@ export default function OTPModal({ onComplete }) {
             <button
               type="button"
               onClick={() => onComplete("you")}
-              className="flex-1 rounded-2xl bg-white/10 px-4 py-3 font-semibold text-white hover:bg-white/15 active:scale-95 transition-all"
+              className="flex-1 rounded-2xl bg-emerald-900/5 px-4 py-3 font-semibold text-emerald-950 hover:bg-emerald-900/10 active:scale-95 transition-all"
             >
               I am Saurav
             </button>
             <button
               type="submit"
-              className="flex-1 rounded-2xl bg-gradient-to-r from-sky-500 to-cyan-500 px-4 py-3 font-semibold text-white hover:opacity-90 active:scale-95 transition-all"
+              className="flex-1 rounded-2xl bg-gradient-to-r from-[#A4B6AF] to-[#C5D0CB] px-4 py-3 font-semibold text-emerald-950 hover:opacity-90 active:scale-95 transition-all"
             >
               Enter
             </button>

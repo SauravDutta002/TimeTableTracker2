@@ -34,7 +34,7 @@ function StatusRing({ status, id }) {
   const isBusy = status.type === "class" || status.type === "lab";
   return (
     <RingProgress progress={isBusy ? status.progress : 1} size={44} stroke={4} id={id}>
-      <span className="text-[10px] font-semibold text-white">
+      <span className="text-[10px] font-semibold text-emerald-950">
         {isBusy ? `${Math.round(status.progress * 100)}%` : "🤝"}
       </span>
     </RingProgress>
@@ -109,21 +109,21 @@ export default function App() {
         <div className="safe-top mx-auto flex min-h-screen w-full max-w-md flex-col px-4 pb-28 pt-6">
         <header className="mb-5 flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h2 className="text-[20px] font-semibold leading-snug tracking-tight text-white">
+            <h2 className="text-[24px] font-serif font-bold leading-snug tracking-tight text-emerald-950">
               {greeting}
             </h2>
             {compliment && (
-              <p className="mt-0.5 text-[13px] font-medium leading-snug text-rose-300/80">{compliment}</p>
+              <p className="mt-0.5 text-[13px] font-medium leading-snug text-emerald-800/80">{compliment}</p>
             )}
-            <p className="mt-1.5 text-[12px] text-white/40">{dateLabel}</p>
+            <p className="mt-1.5 text-[12px] text-emerald-950/60 font-medium">{dateLabel}</p>
           </div>
           <div className="flex shrink-0 -space-x-2">
             {Object.values(PEOPLE).map((p) => (
               <button
                 key={p.id}
                 onClick={() => setViewer(p.id)}
-                className={`press flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br text-[12px] font-semibold text-white ring-2 bg-clip-padding transition-shadow ${p.gradient} ${
-                  viewer === p.id ? "ring-white" : "ring-black"
+                className={`press flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br text-[12px] font-semibold text-emerald-950 ring-2 bg-clip-padding transition-shadow ${p.gradient} ${
+                  viewer === p.id ? "ring-emerald-900/50" : "ring-transparent"
                 }`}
               >
                 {p.initials}
@@ -138,7 +138,11 @@ export default function App() {
 
         {activeTab === "today" && (
           <div key="today" className="animate-fade-up mt-5 flex flex-col gap-3">
-            <div className="rounded-[28px] bg-gradient-to-b from-white/[0.08] to-white/[0.02] p-4 ring-1 ring-white/[0.06]">
+            <div className="rounded-[28px] bg-gradient-to-b from-white/60 to-white/30 p-4 ring-1 ring-emerald-900/5 shadow-sm backdrop-blur-md overflow-hidden">
+              <div className="relative -mx-4 -mt-4 mb-2 h-40 bg-[#F4F1EA]">
+                <img src="/totoro_banner.png" alt="Totoro Banner" className="w-full h-full object-cover mix-blend-multiply opacity-90" />
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white/90" />
+              </div>
               <HeroStatus
                 status={primaryStatus}
                 isToday={isViewingToday}
@@ -154,7 +158,7 @@ export default function App() {
                 value={(STATUS_META[secondaryStatus.type] ?? STATUS_META.off).label}
                 sub={
                   secondaryStatus.type === "class" || secondaryStatus.type === "lab" ? (
-                    <span className="mt-0.5 inline-flex items-center rounded-lg bg-white/20 px-2 py-0.5 text-[20px] font-bold leading-none text-white">
+                    <span className="mt-0.5 inline-flex items-center rounded-lg bg-emerald-900/10 px-2 py-0.5 text-[20px] font-bold leading-none text-emerald-950">
                       {secondaryStatus.room ? secondaryStatus.room.replace("Block-", "") : courseNumber(secondaryStatus.subject)}
                     </span>
                   ) : secondaryStatus.secondsToStart ? (
@@ -169,8 +173,8 @@ export default function App() {
               <StatCard
                 gradient={
                   freeNowBlock
-                    ? "from-emerald-500 via-teal-500 to-emerald-600"
-                    : "from-zinc-700 to-zinc-800"
+                    ? "from-[#C4D7B2] to-[#A0C49D]"
+                    : "from-[#E5E0D8] to-[#D5D0C8]"
                 }
                 label="Free To Meet"
                 value={freeNowBlock ? "Yes" : "No"}
@@ -188,7 +192,7 @@ export default function App() {
               />
 
               <StatCard
-                gradient="from-violet-500 via-purple-500 to-indigo-600"
+                gradient="from-[#E2D4E1] to-[#C9B9C7]"
                 label="Free Windows"
                 value={upcomingBlocks.length}
                 unit={isViewingToday ? "left today" : "today"}
@@ -196,7 +200,7 @@ export default function App() {
               />
 
               <StatCard
-                gradient="from-amber-500 via-orange-500 to-rose-500"
+                gradient="from-[#F2D7B4] to-[#E3BE92]"
                 label="Longest Window"
                 value={longestBlock ? durationLabel(longestBlock.duration).split(" ")[0] : "–"}
                 unit={longestBlock ? durationLabel(longestBlock.duration).split(" ")[1] : ""}

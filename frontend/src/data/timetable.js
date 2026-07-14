@@ -34,8 +34,8 @@ export const PEOPLE = {
     name: "Saurav",
     shortName: "Saurav",
     initials: "S",
-    gradient: "from-rose-500 via-pink-500 to-fuchsia-600",
-    ring: "#fb7185",
+    gradient: "from-[#E6DAC3] to-[#D5C7AB]",
+    ring: "#8C9B86",
     schedule: {
       Mon: [
         lab("24CSP-305", "Charnpreet Kaur", "Block-B3-506"),
@@ -104,8 +104,8 @@ export const PEOPLE = {
     name: "Parvaaz",
     shortName: "Parvaaz",
     initials: "P",
-    gradient: "from-sky-500 via-cyan-500 to-emerald-500",
-    ring: "#38bdf8",
+    gradient: "from-[#C5D0CB] to-[#A4B6AF]",
+    ring: "#627D77",
     schedule: {
       Mon: [
         FREE,

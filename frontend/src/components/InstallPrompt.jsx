@@ -38,21 +38,21 @@ export default function InstallPrompt() {
   if (!visible) return null;
 
   return (
-    <div className="animate-fade-up mb-3 flex items-center gap-3 rounded-[22px] border border-white/10 bg-white/[0.06] p-3 pl-4 backdrop-blur-xl">
-      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-rose-500 via-pink-500 to-fuchsia-600">
-        <HiArrowDownTray className="h-4.5 w-4.5 text-white" />
+    <div className="animate-fade-up mb-3 flex items-center gap-3 rounded-[22px] border border-emerald-900/10 bg-white/60 p-3 pl-4 backdrop-blur-xl shadow-sm">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#E6DAC3] to-[#D5C7AB]">
+        <HiArrowDownTray className="h-4.5 w-4.5 text-emerald-950" />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="truncate text-[13px] font-medium text-white">Install Timetable</p>
-        <p className="truncate text-[11px] text-white/45">Add to your home screen for quick access</p>
+        <p className="truncate text-[13px] font-medium text-emerald-950">Install Timetable</p>
+        <p className="truncate text-[11px] text-emerald-950/60">Add to your home screen for quick access</p>
       </div>
       <button
         onClick={install}
-        className="press shrink-0 rounded-full bg-white px-3 py-1.5 text-[12px] font-semibold text-black"
+        className="press shrink-0 rounded-full bg-emerald-900 px-3 py-1.5 text-[12px] font-semibold text-white"
       >
         Install
       </button>
-      <button onClick={dismiss} className="press shrink-0 p-1 text-white/30">
+      <button onClick={dismiss} className="press shrink-0 p-1 text-emerald-900/40">
         <HiXMark className="h-4 w-4" />
       </button>
     </div>

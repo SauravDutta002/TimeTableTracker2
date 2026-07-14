@@ -13,7 +13,7 @@ export default function ScheduleList({ person, day, isToday, nowMin }) {
 
   if (!daySchedule) {
     return (
-      <div className="rounded-[24px] bg-white/[0.05] p-6 text-center text-white/40">
+      <div className="rounded-[24px] bg-white/40 p-6 text-center text-emerald-950/50">
         No college on {day}
       </div>
     );
@@ -25,7 +25,7 @@ export default function ScheduleList({ person, day, isToday, nowMin }) {
 
   if (rows.length === 0) {
     return (
-      <div className="rounded-[24px] bg-white/[0.05] p-6 text-center text-white/40">
+      <div className="rounded-[24px] bg-white/40 p-6 text-center text-emerald-950/50">
         No college on {day}
       </div>
     );
@@ -43,16 +43,16 @@ export default function ScheduleList({ person, day, isToday, nowMin }) {
           <div
             key={i}
             className={`flex items-center gap-3 rounded-2xl p-3 transition-colors ${
-              isCurrent ? "bg-white/[0.1] ring-1 ring-white/20" : "bg-white/[0.04]"
+              isCurrent ? "bg-white/80 ring-1 ring-emerald-900/10 shadow-sm" : "bg-white/40"
             }`}
           >
             <div className={`h-9 w-1 shrink-0 rounded-full ${TYPE_BAR[slot.type]}`} />
-            <div className="w-[64px] shrink-0 text-[12px] leading-tight text-white/45">
+            <div className="w-[64px] shrink-0 text-[12px] leading-tight text-emerald-950/50">
               {minutesToLabel(start)}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[15px] font-medium text-white">{getSubjectName(slot.subject)}</p>
-              <p className="truncate text-[12px] text-white/40">
+              <p className="truncate text-[15px] font-medium text-emerald-950">{getSubjectName(slot.subject)}</p>
+              <p className="truncate text-[12px] text-emerald-950/60">
                 {slot.faculty
                   ? `${slot.faculty}${slot.room ? ` · ${slot.room}` : ""}`
                   : slot.room || meta.label}

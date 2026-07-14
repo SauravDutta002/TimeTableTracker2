@@ -3,17 +3,13 @@ import React from "react";
 export default function CuteMascot({ type, color }) {
   return (
     <div
-      className="relative flex items-center justify-center animate-float transition-all duration-500"
-      style={{ filter: `drop-shadow(0px 8px 16px ${color}70)` }}
+      className="relative flex items-center justify-center animate-float transition-all duration-500 mix-blend-multiply"
+      style={{ filter: `drop-shadow(0px 4px 8px ${color}30)` }}
     >
       <img 
-        src="/snoopy.png" 
-        alt="Snoopy Mascot" 
-        className="w-[65px] h-[65px] object-contain"
-        onError={(e) => { 
-          // Fallback to a web Snoopy image if the local file isn't found
-          e.target.src = "https://upload.wikimedia.org/wikipedia/en/5/53/Snoopy_Peanuts.png"; 
-        }}
+        src="/mascot.png" 
+        alt="Ghibli Mascot" 
+        className="w-[75px] h-[75px] object-contain"
       />
     </div>
   );

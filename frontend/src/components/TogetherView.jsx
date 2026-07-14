@@ -13,11 +13,11 @@ export default function TogetherView({ you, friend, todayKey, nowMin }) {
           <div
             key={day}
             className={`rounded-[24px] p-4 ${
-              isToday ? "bg-white/[0.08] ring-1 ring-white/15" : "bg-white/[0.04]"
+              isToday ? "bg-white/60 ring-1 ring-emerald-900/10 shadow-sm" : "bg-white/40"
             }`}
           >
             <div className="mb-2.5 flex items-center justify-between">
-              <span className="text-[14px] font-semibold text-white">{day}</span>
+              <span className="text-[14px] font-semibold text-emerald-950">{day}</span>
               {isToday && (
                 <span className="rounded-full bg-rose-400/20 px-2 py-0.5 text-[10px] font-semibold text-rose-300">
                   TODAY
@@ -26,7 +26,7 @@ export default function TogetherView({ you, friend, todayKey, nowMin }) {
             </div>
 
             {visibleBlocks.length === 0 ? (
-              <p className="text-[13px] text-white/35">
+              <p className="text-[13px] text-emerald-950/50">
                 {isToday ? "No free time left together today" : "No overlapping free time"}
               </p>
             ) : (
@@ -41,7 +41,7 @@ export default function TogetherView({ you, friend, todayKey, nowMin }) {
                     }`}
                   >
                     {minutesToLabel(b.start)} – {minutesToLabel(b.end)}
-                    <span className="text-white/35"> · {durationLabel(b.duration)}</span>
+                    <span className="text-emerald-950/40"> · {durationLabel(b.duration)}</span>
                   </span>
                 ))}
               </div>
