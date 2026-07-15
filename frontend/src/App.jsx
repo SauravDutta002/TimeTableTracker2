@@ -41,16 +41,23 @@ function StatusRing({ status, id }) {
   );
 }
 
+const BANNERS = ["/totoro_banner.png", "/noface_banner.png", "/totoro_sleeping.png"];
+
 export default function App() {
   const [now, setNow] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState(DEFAULT_DAY);
   const [activeTab, setActiveTab] = useState("today");
   const [hasIdentified, setHasIdentified] = useState(() => localStorage.getItem("user_identity") !== null);
   const [viewer, setViewer] = useState(() => localStorage.getItem("user_identity") || "you");
+  const [bannerIndex, setBannerIndex] = useState(0);
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(id);
+    const bannerId = setInterval(() => setBannerIndex((prev) => (prev + 1) % BANNERS.length), 5000);
+    return () => {
+      clearInterval(id);
+      clearInterval(bannerId);
+    };
   }, []);
 
   const realToday = todayKey(now);
@@ -140,7 +147,16 @@ export default function App() {
           <div key="today" className="animate-fade-up mt-5 flex flex-col gap-3">
             <div className="rounded-[28px] bg-gradient-to-b from-white/60 to-white/30 p-4 ring-1 ring-emerald-900/5 shadow-sm backdrop-blur-md overflow-hidden">
               <div className="relative -mx-4 -mt-4 mb-2 h-40 bg-[#F4F1EA]">
-                <img src="/totoro_banner.png" alt="Totoro Banner" className="w-full h-full object-cover mix-blend-multiply opacity-90" />
+                {BANNERS.map((src, idx) => (
+                  <img
+                    key={src}
+                    src={src}
+                    alt="Ghibli Banner"
+                    className={`absolute inset-0 w-full h-full object-cover mix-blend-multiply transition-opacity duration-1000 ${
+                      idx === bannerIndex ? "opacity-90" : "opacity-0"
+                    }`}
+                  />
+                ))}
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white/90" />
               </div>
               <HeroStatus
