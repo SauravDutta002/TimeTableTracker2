@@ -45,7 +45,7 @@ export const PEOPLE = {
         FREE,
         lab("24CSH-310", "Rahul Durgapal", "Block-B3-508"),
         lab("24CSH-310", "Rahul Durgapal", "Block-B3-508"),
-        cls("24CST-331", "Thoiba", "Block-B3-303"),
+        cls("24CST-331", "Nongmeikapam Thoiba Singh", "Block-B3-303"),
       ],
       Tue: [
         lab("24CSP-304", "Megha Sharma", "Block-B3-403-A"),
@@ -79,12 +79,12 @@ export const PEOPLE = {
       ],
       Fri: [
         FREE,
-        FREE,
+        cls("24SMT-341", "Kiran Utreja", "Block-B3-303"),
         cls("24TDT-312", "Anmol", "Block-B3-303"),
         cls("24TDT-312", "Anmol", "Block-B3-303"),
         FREE,
         cls("24CST-302", "Sukhvir Kaur", "Block-B3-303"),
-        cls("24SMT-341", "Kiran Utreja", "Block-B3-303"),
+        FREE,
         cls("24CSH-301", "Namrta Tanwar", "Block-B3-303"),
       ],
       Sat: [
@@ -139,13 +139,13 @@ export const PEOPLE = {
       ],
       Thu: [
         cls("24SMT-341", "Rekha Rani", "Block-C2-507"),
+        lab("24CSH-324", "Shivani Sharma", "Block-C2-507"),
+        lab("24CSH-324", "Shivani Sharma", "Block-C2-507"),
+        FREE,
+        FREE,
+        cls("24CSH-324", "Shivani Sharma", "Block-C2-507"),
         cls("24SMT-341", "Ram Narain Prajapati", "Block-C2-507"),
         cls("24SMT-341", "Rekha Rani", "Block-C2-507"),
-        FREE,
-        FREE,
-        lab("24CSH-324", "Shivani Sharma", "Block-C2-507"),
-        lab("24CSH-324", "Shivani Sharma", "Block-C2-507"),
-        cls("24CSH-324", "Shivani Sharma", "Block-C2-507"),
       ],
       Fri: [
         lab("24TDP-311", "Saniya", "Block-C2-308"),
