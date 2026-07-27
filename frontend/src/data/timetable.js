@@ -84,8 +84,8 @@ export const PEOPLE = {
         cls("24TDT-312", "Anmol", "Block-B3-303"),
         FREE,
         cls("24CST-302", "Sukhvir Kaur", "Block-B3-303"),
-        FREE,
         cls("24CSH-301", "Namrta Tanwar", "Block-B3-303"),
+        FREE,
       ],
       Sat: [
         lab("24CSI-305", "Staff", "Block-B3-22"),
