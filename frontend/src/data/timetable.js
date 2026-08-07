@@ -10,12 +10,12 @@ export const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 export const PERIODS = [
   { start: "09:30", end: "10:20" },
   { start: "10:20", end: "11:10" },
-  { start: "11:20", end: "12:10" },
-  { start: "12:10", end: "13:00" },
-  { start: "13:05", end: "13:55" },
-  { start: "13:55", end: "14:45" },
-  { start: "14:45", end: "15:35" },
-  { start: "15:35", end: "16:25" },
+  { start: "11:10", end: "12:00" },
+  { start: "12:00", end: "12:50" },
+  { start: "12:50", end: "13:40" },
+  { start: "13:40", end: "14:30" },
+  { start: "14:30", end: "15:20" },
+  { start: "15:20", end: "16:10" },
 ];
 
 const FREE = { subject: "Free Period", room: "", faculty: "", type: "free" };
