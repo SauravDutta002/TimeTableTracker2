@@ -31,6 +31,7 @@ import MarksCard from "./components/MarksCard.jsx";
 import PerformanceChart from "./components/PerformanceChart.jsx";
 import { parvaazGreeting, simpleGreeting } from "./data/greetings.js";
 import useDataSync from "./hooks/useDataSync.js";
+import { HiOutlineAdjustmentsHorizontal, HiOutlineMinus, HiOutlinePlus } from 'react-icons/hi2';
 
 const REAL_TODAY = todayKey();
 const DEFAULT_DAY = DAYS.includes(REAL_TODAY) ? REAL_TODAY : "Mon";
@@ -51,7 +52,7 @@ const BANNERS = ["/totoro_banner.png", "/noface_banner.png", "/totoro_sleeping.p
 export default function App() {
   const [now, setNow] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState(DEFAULT_DAY);
-  const [activeTab, setActiveTab] = useState("today");
+  const [activeTab, setActiveTab] = useState(() => localStorage.getItem("active_tab") || "today");
   const [hasIdentified, setHasIdentified] = useState(() => localStorage.getItem("user_identity") !== null);
   const [viewer, setViewer] = useState(() => localStorage.getItem("user_identity") || "you");
   const [bannerIndex, setBannerIndex] = useState(0);
@@ -61,7 +62,8 @@ export default function App() {
     return saved ? JSON.parse(saved) : null;
   });
   const [activeSession, setActiveSession] = useState(null);
-  const [globalTarget, setGlobalTarget] = useState(75);
+  const [globalTarget, setGlobalTarget] = useState(() => Number(localStorage.getItem("global_target")) || 75);
+  const [showFilter, setShowFilter] = useState(false);
 
   // Initialize active session when data loads
   useEffect(() => {
@@ -85,6 +87,14 @@ export default function App() {
       Notification.requestPermission();
     }
   };
+
+  useEffect(() => {
+    localStorage.setItem("global_target", globalTarget.toString());
+  }, [globalTarget]);
+
+  useEffect(() => {
+    localStorage.setItem("active_tab", activeTab);
+  }, [activeTab]);
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000);
@@ -297,8 +307,17 @@ export default function App() {
             ) : (
               <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between px-2 mb-2">
-                  <h3 className="text-sm font-semibold text-emerald-950/80 uppercase tracking-wider">
+                  <h3 className="text-sm font-semibold text-emerald-950/80 uppercase tracking-wider flex items-center gap-3">
                     Your Attendance
+                    <button 
+                      onClick={() => setShowFilter(!showFilter)}
+                      className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all shadow-sm ${
+                        showFilter ? 'bg-emerald-600 text-white ring-2 ring-emerald-600/30' : 'bg-emerald-900/10 text-emerald-900 hover:bg-emerald-900/20'
+                      }`}
+                    >
+                      <HiOutlineAdjustmentsHorizontal className="w-3.5 h-3.5" />
+                      Target: {globalTarget}%
+                    </button>
                   </h3>
                   <button 
                     onClick={() => {
@@ -313,19 +332,28 @@ export default function App() {
                   </button>
                 </div>
 
-                <div className="flex items-center justify-between bg-white/40 rounded-[20px] px-4 py-3 mb-1 ring-1 ring-emerald-900/5 shadow-sm backdrop-blur-md">
-                  <span className="text-xs font-semibold text-emerald-950/80">Global Target</span>
-                  <div className="flex items-center gap-2">
-                    <input 
-                      type="range" 
-                      min="50" max="100" 
-                      value={globalTarget} 
-                      onChange={e => setGlobalTarget(Number(e.target.value))}
-                      className="w-24 accent-emerald-500"
-                    />
-                    <span className="text-sm font-bold text-emerald-950 w-10 text-right">{globalTarget}%</span>
+                {showFilter && (
+                  <div className="flex flex-col gap-3 bg-white/60 rounded-[20px] px-4 py-4 mb-1 ring-1 ring-emerald-900/10 shadow-sm backdrop-blur-md animate-fade-up">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-semibold text-emerald-950/80">Adjust Minimum Target</span>
+                      <div className="flex items-center gap-3 bg-white/80 rounded-full px-1 py-1 shadow-sm ring-1 ring-emerald-900/5">
+                        <button 
+                          onClick={() => setGlobalTarget(Math.max(50, globalTarget - 1))}
+                          className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-emerald-100 active:bg-emerald-200 text-emerald-900 transition-colors"
+                        >
+                          <HiOutlineMinus className="w-4 h-4" />
+                        </button>
+                        <span className="text-sm font-bold text-emerald-950 w-9 text-center">{globalTarget}%</span>
+                        <button 
+                          onClick={() => setGlobalTarget(Math.min(100, globalTarget + 1))}
+                          className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-emerald-100 active:bg-emerald-200 text-emerald-900 transition-colors"
+                        >
+                          <HiOutlinePlus className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {cuimsData?.attendance?.subjects?.map((subj, idx) => (
                   <AttendanceCard key={subj.EncryptCode || idx} subject={subj} index={idx} targetPercent={globalTarget} />

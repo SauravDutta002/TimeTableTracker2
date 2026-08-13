@@ -115,38 +115,68 @@ export default function PerformanceChart({ sessionData }) {
       <div className="relative w-[240px] h-[240px]">
         <svg viewBox="0 0 240 240" className="w-full h-full drop-shadow-sm">
           {/* Background guide rings */}
-          <circle cx={cx} cy={cy} r={MAX_RADIUS} fill="none" stroke="rgba(6, 78, 59, 0.05)" strokeWidth="1" />
-          <circle cx={cx} cy={cy} r={MAX_RADIUS * 0.75} fill="none" stroke="rgba(6, 78, 59, 0.05)" strokeWidth="1" />
-          <circle cx={cx} cy={cy} r={MAX_RADIUS * 0.5} fill="none" stroke="rgba(6, 78, 59, 0.05)" strokeWidth="1" />
+          <circle cx={cx} cy={cy} r={MAX_RADIUS} fill="none" stroke="rgba(6, 78, 59, 0.08)" strokeWidth="1" />
+          <circle cx={cx} cy={cy} r={MAX_RADIUS * 0.75} fill="none" stroke="rgba(6, 78, 59, 0.05)" strokeWidth="1" strokeDasharray="2 2" />
+          <circle cx={cx} cy={cy} r={MAX_RADIUS * 0.5} fill="none" stroke="rgba(6, 78, 59, 0.05)" strokeWidth="1" strokeDasharray="2 2" />
+          <circle cx={cx} cy={cy} r={MAX_RADIUS * 0.25} fill="none" stroke="rgba(6, 78, 59, 0.05)" strokeWidth="1" strokeDasharray="2 2" />
 
+          {/* Spokes (Axes) */}
           {chartData.map((d, i) => {
-            const startAngle = i * angleStep;
-            const endAngle = (i + 1) * angleStep;
-            const midAngle = startAngle + angleStep / 2;
+            const angle = i * angleStep;
+            const endPos = polarToCartesian(cx, cy, MAX_RADIUS, angle);
+            return (
+              <line key={`spoke-${i}`} x1={cx} y1={cy} x2={endPos.x} y2={endPos.y} stroke="rgba(6, 78, 59, 0.08)" strokeWidth="1" />
+            );
+          })}
+
+          {/* Radar Polygon */}
+          <polygon
+            points={chartData.map((d, i) => {
+              const angle = i * angleStep;
+              const targetRadius = (Math.max(d.percentage, 0) / 100) * MAX_RADIUS;
+              const radius = mounted ? targetRadius : 0;
+              const pos = polarToCartesian(cx, cy, radius, angle);
+              return `${pos.x},${pos.y}`;
+            }).join(" ")}
+            fill="rgba(16, 185, 129, 0.2)"
+            stroke="#10b981"
+            strokeWidth="2"
+            strokeLinejoin="round"
+            className="transition-all duration-1000 ease-out origin-center"
+            style={{ transformOrigin: `${cx}px ${cy}px` }}
+          />
+
+          {/* Data Points & Labels */}
+          {chartData.map((d, i) => {
+            const angle = i * angleStep;
             
-            // Calculate slice radius based on percentage, smoothly animate in
-            const targetRadius = (Math.max(d.percentage, 5) / 100) * MAX_RADIUS;
+            const targetRadius = (Math.max(d.percentage, 0) / 100) * MAX_RADIUS;
             const radius = mounted ? targetRadius : 0;
+            const pos = polarToCartesian(cx, cy, radius, angle);
             
-            // Label positioning
-            const labelPos = polarToCartesian(cx, cy, MAX_RADIUS + 20, midAngle);
-            const isLeft = labelPos.x < cx;
+            const labelPos = polarToCartesian(cx, cy, MAX_RADIUS + 18, angle);
+            const isLeft = labelPos.x < cx - 5;
+            const isRight = labelPos.x > cx + 5;
+            let anchor = "middle";
+            if (isLeft) anchor = "end";
+            if (isRight) anchor = "start";
 
             return (
-              <g key={d.id} className="group cursor-default">
-                {/* The Polar Slice */}
-                <path 
-                  d={createSlice(cx, cy, radius, startAngle, endAngle)}
-                  fill={d.fillColor}
-                  className="transition-all duration-1000 ease-out opacity-90 group-hover:opacity-100 hover:scale-[1.03] origin-center"
-                  style={{ transformOrigin: `${cx}px ${cy}px` }}
+              <g key={`point-${d.id}`} className="group cursor-default">
+                {/* Data Point */}
+                <circle 
+                  cx={pos.x} 
+                  cy={pos.y} 
+                  r="3.5" 
+                  fill={d.fillColor} 
+                  className="transition-all duration-1000 ease-out group-hover:r-[5px] group-hover:fill-emerald-600"
                 />
                 
                 {/* The Subject Label */}
                 <text
                   x={labelPos.x}
                   y={labelPos.y}
-                  textAnchor={isLeft ? "end" : "start"}
+                  textAnchor={anchor}
                   dominantBaseline="middle"
                   className="text-[9px] font-bold fill-emerald-950/60 transition-all duration-500"
                   style={{ opacity: mounted ? 1 : 0 }}
@@ -160,16 +190,13 @@ export default function PerformanceChart({ sessionData }) {
                   y={cy}
                   textAnchor="middle"
                   dominantBaseline="middle"
-                  className="text-[12px] font-black fill-emerald-950 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"
+                  className="text-[12px] font-black fill-emerald-950 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none bg-white"
                 >
                   {d.percentage.toFixed(0)}%
                 </text>
               </g>
             );
           })}
-          
-          {/* Center mask to make it look like a donut polar area, optional, but looks nice */}
-          <circle cx={cx} cy={cy} r="15" className="fill-[#FAF8F2] shadow-inner" />
         </svg>
       </div>
       
