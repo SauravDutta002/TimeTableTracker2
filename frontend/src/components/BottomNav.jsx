@@ -5,12 +5,18 @@ import {
   HiOutlineCalendarDays,
   HiUserGroup,
   HiOutlineUserGroup,
+  HiClipboardDocumentCheck,
+  HiOutlineClipboardDocumentCheck,
+  HiChartBar,
+  HiOutlineChartBar,
 } from "react-icons/hi2";
 
 const TABS = [
   { id: "today", label: "Today", Icon: HiOutlineHome, IconActive: HiHome },
   { id: "schedule", label: "Schedule", Icon: HiOutlineCalendarDays, IconActive: HiCalendarDays },
   { id: "together", label: "Together", Icon: HiOutlineUserGroup, IconActive: HiUserGroup },
+  { id: "attendance", label: "Attendance", Icon: HiOutlineClipboardDocumentCheck, IconActive: HiClipboardDocumentCheck },
+  { id: "marks", label: "Marks", Icon: HiOutlineChartBar, IconActive: HiChartBar },
 ];
 
 export default function BottomNav({ active, onChange }) {
@@ -22,7 +28,7 @@ export default function BottomNav({ active, onChange }) {
         <div
           className="absolute top-2 bottom-2 left-2 rounded-2xl bg-[#EAE6DF] transition-transform duration-300 ease-out"
           style={{
-            width: `calc((100% - 16px) / 3)`,
+            width: `calc((100% - 16px) / 5)`,
             transform: `translateX(${activeIndex * 100}%)`,
           }}
         />

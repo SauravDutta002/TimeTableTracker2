@@ -25,7 +25,12 @@ import TogetherView from "./components/TogetherView.jsx";
 import BottomNav from "./components/BottomNav.jsx";
 import InstallPrompt from "./components/InstallPrompt.jsx";
 import OTPModal from "./components/OTPModal.jsx";
+import Login from "./pages/Login.jsx";
+import AttendanceCard from "./components/AttendanceCard.jsx";
+import MarksCard from "./components/MarksCard.jsx";
+import PerformanceChart from "./components/PerformanceChart.jsx";
 import { parvaazGreeting, simpleGreeting } from "./data/greetings.js";
+import useDataSync from "./hooks/useDataSync.js";
 
 const REAL_TODAY = todayKey();
 const DEFAULT_DAY = DAYS.includes(REAL_TODAY) ? REAL_TODAY : "Mon";
@@ -50,6 +55,36 @@ export default function App() {
   const [hasIdentified, setHasIdentified] = useState(() => localStorage.getItem("user_identity") !== null);
   const [viewer, setViewer] = useState(() => localStorage.getItem("user_identity") || "you");
   const [bannerIndex, setBannerIndex] = useState(0);
+  const [cuimsToken, setCuimsToken] = useState(() => localStorage.getItem("cuims_token") || null);
+  const [cuimsData, setCuimsData] = useState(() => {
+    const saved = localStorage.getItem("cuims_data");
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [activeSession, setActiveSession] = useState(null);
+  const [globalTarget, setGlobalTarget] = useState(75);
+
+  // Initialize active session when data loads
+  useEffect(() => {
+    if (cuimsData?.marks?.sessions?.length && !activeSession) {
+      const current = cuimsData.marks.sessions.find(s => s.isCurrent);
+      const withData = cuimsData.marks.sessions.filter(s => cuimsData.marks.data[s.value]?.length > 0);
+      setActiveSession(withData?.[0]?.value || current?.value || cuimsData.marks.sessions[0].value);
+    }
+  }, [cuimsData, activeSession]);
+
+  // Use the auto-sync hook
+  useDataSync(cuimsToken, cuimsData, setCuimsData);
+
+  const handleCuimsLogin = (token, data) => {
+    localStorage.setItem("cuims_token", token);
+    localStorage.setItem("cuims_data", JSON.stringify(data));
+    setCuimsToken(token);
+    setCuimsData(data);
+    
+    if ("Notification" in window && Notification.permission !== "denied") {
+      Notification.requestPermission();
+    }
+  };
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000);
@@ -252,6 +287,111 @@ export default function App() {
               todayKey={realToday}
               nowMin={nowMin}
             />
+          </div>
+        )}
+
+        {activeTab === "attendance" && (
+          <div key="attendance" className="animate-fade-up mt-5">
+            {!cuimsToken ? (
+              <Login onLoginSuccess={handleCuimsLogin} />
+            ) : (
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between px-2 mb-2">
+                  <h3 className="text-sm font-semibold text-emerald-950/80 uppercase tracking-wider">
+                    Your Attendance
+                  </h3>
+                  <button 
+                    onClick={() => {
+                      localStorage.removeItem("cuims_token");
+                      localStorage.removeItem("cuims_data");
+                      setCuimsToken(null);
+                      setCuimsData(null);
+                    }}
+                    className="text-xs font-medium text-emerald-700/60 hover:text-emerald-700 transition-colors"
+                  >
+                    Logout
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between bg-white/40 rounded-[20px] px-4 py-3 mb-1 ring-1 ring-emerald-900/5 shadow-sm backdrop-blur-md">
+                  <span className="text-xs font-semibold text-emerald-950/80">Global Target</span>
+                  <div className="flex items-center gap-2">
+                    <input 
+                      type="range" 
+                      min="50" max="100" 
+                      value={globalTarget} 
+                      onChange={e => setGlobalTarget(Number(e.target.value))}
+                      className="w-24 accent-emerald-500"
+                    />
+                    <span className="text-sm font-bold text-emerald-950 w-10 text-right">{globalTarget}%</span>
+                  </div>
+                </div>
+
+                {cuimsData?.attendance?.subjects?.map((subj, idx) => (
+                  <AttendanceCard key={subj.EncryptCode || idx} subject={subj} index={idx} targetPercent={globalTarget} />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === "marks" && (
+          <div key="marks" className="animate-fade-up mt-5">
+            {!cuimsToken ? (
+              <Login onLoginSuccess={handleCuimsLogin} />
+            ) : (
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between px-2 mb-2">
+                  <h3 className="text-sm font-semibold text-emerald-950/80 uppercase tracking-wider">
+                    Your Marks
+                  </h3>
+                  <button 
+                    onClick={() => {
+                      localStorage.removeItem("cuims_token");
+                      localStorage.removeItem("cuims_data");
+                      setCuimsToken(null);
+                      setCuimsData(null);
+                    }}
+                    className="text-xs font-medium text-emerald-700/60 hover:text-emerald-700 transition-colors"
+                  >
+                    Logout
+                  </button>
+                </div>
+                
+                {cuimsData?.marks?.sessions?.length > 1 && (
+                  <div className="flex overflow-x-auto gap-2 px-1 pb-2 no-scrollbar">
+                    {cuimsData.marks.sessions.map((sess) => (
+                      <button
+                        key={sess.value}
+                        onClick={() => setActiveSession(sess.value)}
+                        className={`whitespace-nowrap rounded-xl px-4 py-2 text-xs font-semibold transition-all ${
+                          activeSession === sess.value
+                            ? "bg-emerald-900/10 text-emerald-950"
+                            : "bg-white/40 text-emerald-950/50 hover:bg-white/60"
+                        }`}
+                      >
+                        {sess.name}
+                        {sess.isCurrent && " ●"}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {activeSession && cuimsData?.marks?.data?.[activeSession]?.length > 0 ? (
+                  <>
+                    <PerformanceChart sessionData={cuimsData.marks.data[activeSession]} />
+                    {cuimsData.marks.data[activeSession].map((subj, i) => (
+                      <MarksCard key={`${activeSession}-${i}`} subject={subj} />
+                    ))}
+                  </>
+                ) : (
+                  <div className="animate-fade-up rounded-[24px] bg-gradient-to-b from-white/60 to-white/30 p-8 ring-1 ring-emerald-900/5 shadow-sm backdrop-blur-md flex flex-col items-center justify-center text-center">
+                    <span className="text-4xl mb-2">📝</span>
+                    <p className="text-sm text-emerald-950/60 font-medium">No marks data available for this session.</p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
