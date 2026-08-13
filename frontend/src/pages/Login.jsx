@@ -45,65 +45,63 @@ export default function Login({ onLoginSuccess }) {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center p-4 h-full min-h-[50vh] animate-fade-up">
-      <div className="w-full max-w-[300px] rounded-[32px] bg-gradient-to-b from-white/80 to-white/40 p-8 ring-1 ring-emerald-900/10 shadow-lg backdrop-blur-xl">
+    <div className="flex flex-col items-center justify-center py-4 h-full min-h-[50vh] animate-fade-up w-full">
+      <div className="relative w-full max-w-[320px] rounded-[32px] overflow-hidden p-8 shadow-sm ring-1 ring-emerald-900/5">
+        {/* The beautiful Ghibli background with frosted glass overlay */}
+        <div className="absolute inset-0 bg-[url('/ghibli-bg.jpg')] bg-cover bg-center"></div>
+        <div className="absolute inset-0 bg-white/60 backdrop-blur-xl"></div>
         
-        <div className="flex justify-center mb-5">
-          <div className="w-14 h-14 rounded-full bg-emerald-900/5 flex items-center justify-center ring-1 ring-emerald-900/10">
-            <HiOutlineAcademicCap className="w-7 h-7 text-emerald-900" />
-          </div>
-        </div>
-
-        <h2 className="mb-1.5 text-[22px] font-serif font-bold text-center text-emerald-950">Welcome Back</h2>
-        <p className="mb-6 text-xs text-center text-emerald-950/60 leading-relaxed px-2">
-          Sign in to securely sync your academic data.
-        </p>
-
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-          <input
-            id="uid"
-            type="text"
-            placeholder="University ID"
-            value={uid}
-            onChange={(e) => {
-              setUid(e.target.value);
-              setError('');
-            }}
-            disabled={loading}
-            autoComplete="username"
-            className="w-full rounded-[18px] bg-white/60 px-4 py-3 text-xs font-medium text-emerald-950 placeholder-emerald-950/40 outline-none transition-all focus:bg-white focus:ring-2 focus:ring-emerald-900/10 shadow-sm"
-          />
-
-          <input
-            id="password"
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => {
-              setPassword(e.target.value);
-              setError('');
-            }}
-            disabled={loading}
-            autoComplete="current-password"
-            className="w-full rounded-[18px] bg-white/60 px-4 py-3 text-xs font-medium text-emerald-950 placeholder-emerald-950/40 outline-none transition-all focus:bg-white focus:ring-2 focus:ring-emerald-900/10 shadow-sm"
-          />
-
-          {error && <p className="text-[10px] text-rose-500 text-center font-bold mt-1 bg-rose-500/10 py-1.5 rounded-lg">{error}</p>}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="mt-2 w-full rounded-[18px] bg-emerald-900 px-4 py-3 text-xs font-bold tracking-wide text-white shadow-md hover:bg-emerald-800 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed"
-          >
-            {loading ? 'Please wait...' : 'Sign In'}
-          </button>
-        </form>
-
-        {status && (
-          <p className="mt-5 text-[10px] text-center text-emerald-950/50 animate-pulse font-bold tracking-wide uppercase">
-            {status}
+        <div className="relative z-10 flex flex-col">
+          <p className="mb-8 text-[13px] text-center text-emerald-950/80 leading-relaxed px-2 font-bold mt-2">
+            Ready to see your latest attendance and marks?
           </p>
-        )}
+
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <input
+              id="uid"
+              type="text"
+              placeholder="University ID"
+              value={uid}
+              onChange={(e) => {
+                setUid(e.target.value);
+                setError('');
+              }}
+              disabled={loading}
+              autoComplete="username"
+              className="w-full rounded-[20px] bg-white/50 px-4 py-3.5 text-sm font-semibold text-emerald-950 placeholder-emerald-950/40 outline-none transition-all focus:bg-white/70 focus:ring-2 focus:ring-emerald-900/10 shadow-sm backdrop-blur-sm"
+            />
+
+            <input
+              id="password"
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                setError('');
+              }}
+              disabled={loading}
+              autoComplete="current-password"
+              className="w-full rounded-[20px] bg-white/50 px-4 py-3.5 text-sm font-semibold text-emerald-950 placeholder-emerald-950/40 outline-none transition-all focus:bg-white/70 focus:ring-2 focus:ring-emerald-900/10 shadow-sm backdrop-blur-sm"
+            />
+
+            {error && <p className="text-[11px] text-rose-500 text-center font-bold mt-1 bg-white/50 py-2 rounded-xl backdrop-blur-sm">{error}</p>}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="mt-2 w-full rounded-[20px] bg-emerald-700/80 px-4 py-3.5 text-sm font-bold tracking-wide text-white shadow-sm hover:bg-emerald-700 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100 disabled:cursor-not-allowed backdrop-blur-sm"
+            >
+              {loading ? 'Please wait...' : 'Sign In'}
+            </button>
+          </form>
+
+          {status && (
+            <p className="mt-6 text-[11px] text-center text-emerald-950/70 animate-pulse font-bold tracking-wide uppercase">
+              {status}
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );
