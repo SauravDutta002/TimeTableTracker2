@@ -364,18 +364,26 @@ async function getTimetable(session) {
 async function fetchAllData(session) {
   // Phase 1: Fetch profile and attendance in parallel
   const [profile, attendanceResult] = await Promise.all([
-    getProfile(session).catch(() => ({ name: 'Unknown' })),
-    getAttendance(session).catch(() => ({
-      subjects: [],
-      sessionId: null,
-      reportId: null,
-    })),
+    getProfile(session).catch((err) => {
+      console.error('[CUIMS] Profile fetch error:', err.message);
+      return { name: 'Unknown' };
+    }),
+    getAttendance(session).catch((err) => {
+      console.error('[CUIMS] Attendance fetch error:', err.message);
+      return { subjects: [], sessionId: null, reportId: null };
+    }),
   ]);
 
   // Phase 2: Fetch marks and timetable in parallel
   const [marks, timetable] = await Promise.all([
-    getMarksAllSessions(session).catch(() => ({ sessions: [], data: {} })),
-    getTimetable(session).catch(() => null),
+    getMarksAllSessions(session).catch((err) => {
+      console.error('[CUIMS] Marks fetch error:', err.message);
+      return { sessions: [], data: {} };
+    }),
+    getTimetable(session).catch((err) => {
+      console.error('[CUIMS] Timetable fetch error:', err.message);
+      return null;
+    }),
   ]);
 
   return {

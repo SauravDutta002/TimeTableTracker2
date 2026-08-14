@@ -1,0 +1,202 @@
+getMonth
+getDate
+getFullYear
+datepicker
+#txtfromdate
+#txttodate
+
+val
+#drpfilter
+DS
+display
+block
+css
+#div_filter
+none
+value
+Date Wise
+text
+#lbtype
+Till Date(All days)
+change
+ready
+userAgent
+test
+hide
+input[type="button"][value="Print Data"]
+#loader-wrapper
+input[type="hidden"]
+find
+td
+parent
+chk
+attr
+obj
+#ddlSession :selected
+undefined
+#hfdbSelSes
+html
+.CourseCode
+0
+frmStudentCourseWiseAttendanceSummary.aspx/GetFullReport
+{course:'
+',UID:'
+',fromDate:'
+',toDate:'
+',type:'
+',Session:'
+'}
+POST
+application/json; charset=utf-8
+json
+Result
+d
+No Data Found
+Error
+No Attendance detail found !!
+error
+parseJSON
+<thead><tr><th>SrNo</th><th>Date</th><th>Type</th><th>Time</th><th>Attendance</th><th>Section</th><th>Group</th><th>Marked By</th></tr></thead>
+#fullreport
+length
+AttDate
+AttendanceType
+L
+Lecture
+P
+Practical
+Tutorial
+AttendanceCode
+A
+Absent
+Present
+20ECP-154
+width
+100%
+#popupid
+<tr><td data-label='SrNo'>
+</td><td data-label='Date'>
+</td><td data-label='Type'>
+</td><td data-label='Time'>
+Timing
+</td><td data-label='Attendance'>
+</td><td data-label='Section'>
+Section
+</td><td data-label='Group'>
+StudentGroup
+</td><td data-label='Marked By'>
+Name
+</td>
+<td data-label='Feedback'>
+<input type='button'  Scourse=
+ Stype=
+StudentType
+ Stiming=
+Studenttiming
+ Ssection=
+ Sgroup=
+ Sdate=
+StuDate
+ Scode=
+ value='Session analysis' style='display:
+' onClick='GiveFeedback(this)'/><label style='display:
+;color: green;'>'
+feedbacktext
+'</label></td></tr>
+append
+scrollTop
+#div_attend_details
+Error in loading Attendance Details, please refresh and try again
+ajax
+.overlay
+empty
+#SortTable > tbody
+.Section
+.StudentGroup
+frmStudentCourseWiseAttendanceSummary.aspx/GetReport
+{UID:'
+name
+.name
+Semester
+.semester
+UId
+.uid
+EligibilityPercentage
+Code
+push
+green
+red
+colorcode
+Total_Delv
+Total_Attd
+<tr><td data-label='Course Code:'>
+</td><td data-label='Title:'>
+Title
+</td><td data-label='Total_Delv:'>
+</td><td data-label='Total_Attd:'>
+</td><td data-label='Duty Leave IDL:'>
+DutyLeave_N_P
+</td><td data-label='Duty Leave ADL:'>
+DutyLeave_ADL
+</td><td data-label='Duty Leave VDL:'>
+DutyLeave_Others
+</td><td data-label='Medical Leave:'>
+MedicalLeave
+</td><td data-label='Eligible Delivered:'>
+EligibilityDelivered
+</td><td data-label='Eligible Attended:'>
+EligibilityAttended
+</td><td data-label='Eligible Percentage:'>
+</td><td><input type='hidden' value='
+' /><input type='button'  chk=
+EncryptCode
+ obj=
+ value='View' onClick='getdata(this)'/></td></tr>
+#SortTable
+round
+container
+column
+Total Percentage
+chart
+div_attend_details
+getElementById
+open
+innerHTML
+write
+document
+print
+close
+frmStudentCourseWiseAttendanceSummary.aspx/GetFullReportDateWise
+{toDate:'
+Invalid
+Please select FromDate and ToDate
+Invalid date
+From Date is Greater than the To Date !!
+Date Wise Search between 
+ to 
+#givefeedback
+.loading_popup
+Scourse
+Scode
+Stype
+Stiming
+Ssection
+Sgroup
+Sdate
+frmStudentCourseWiseAttendanceSummary.aspx/ShowFeedback
+{Course:'
+',Code:'
+',Type:'
+',Timing:'
+',Section:'
+',Group:'
+',Date:'
+<div id="divEhcHistoryMessages" class="ClassdivEhcHistoryMessages">
+indexOf
+</form>
+substring
+#divEhcConversation
+scrollHeight
+outerHeight
+fadeOut
+0%

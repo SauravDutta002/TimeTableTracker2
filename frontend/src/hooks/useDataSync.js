@@ -24,10 +24,21 @@ export default function useDataSync(cuimsToken, cuimsData, setCuimsData) {
       const result = await response.json();
 
       if (response.ok && result.success) {
-        const newData = result.data;
+        const newData = { ...result.data };
         
-        // Compare with old data
+        // Merge logic to prevent overwriting with blank data if API fails
         if (cuimsData) {
+          if (!newData.attendance?.subjects?.length && cuimsData.attendance?.subjects?.length) {
+            newData.attendance = cuimsData.attendance;
+          }
+          if (!newData.marks?.sessions?.length && cuimsData.marks?.sessions?.length) {
+            newData.marks = cuimsData.marks;
+          }
+          if (!newData.timetable?.schedule && cuimsData.timetable?.schedule) {
+            newData.timetable = cuimsData.timetable;
+          }
+
+          // Compare with old data for notifications
           const notifications = diffCuimsData(cuimsData, newData);
           
           if (notifications.length > 0 && Notification.permission === 'granted') {
@@ -41,7 +52,6 @@ export default function useDataSync(cuimsToken, cuimsData, setCuimsData) {
         }
 
         // Update state and storage if changed
-        // We do a simple stringify check, or just set it
         localStorage.setItem("cuims_data", JSON.stringify(newData));
         setCuimsData(newData);
       }
