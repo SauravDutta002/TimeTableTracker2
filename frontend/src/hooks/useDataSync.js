@@ -32,10 +32,18 @@ export default function useDataSync(cuimsToken, cuimsData, setCuimsData, setCuim
           
           if (notifications.length > 0 && Notification.permission === 'granted') {
             notifications.forEach((msg) => {
-              new Notification('CUIMS Update', {
+              const title = 'CUIMS Update';
+              const options = {
                 body: msg,
-                icon: '/icons/icon-192x192.png',
-              });
+                icon: '/icons/icon-192.png',
+              };
+              if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.ready.then(registration => {
+                  registration.showNotification(title, options);
+                }).catch(() => new Notification(title, options));
+              } else {
+                new Notification(title, options);
+              }
             });
           }
         }

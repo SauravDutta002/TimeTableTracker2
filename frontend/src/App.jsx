@@ -373,12 +373,24 @@ export default function App() {
                             if ("Notification" in window) {
                               Notification.requestPermission().then(permission => {
                                 if (permission === "granted") {
-                                  new Notification('CUIMS Update', {
+                                  const title = 'CUIMS Update';
+                                  const options = {
                                     body: 'Attendance Updated: Marked Present in Computer Networks',
-                                    icon: '/icons/icon-192x192.png'
-                                  });
+                                    icon: '/icons/icon-192.png'
+                                  };
+                                  if ('serviceWorker' in navigator) {
+                                    navigator.serviceWorker.ready.then(registration => {
+                                      registration.showNotification(title, options);
+                                    }).catch(() => new Notification(title, options));
+                                  } else {
+                                    new Notification(title, options);
+                                  }
+                                } else {
+                                  alert("Please enable notification permissions in your phone settings.");
                                 }
                               });
+                            } else {
+                              alert("Notifications are not supported on this browser.");
                             }
                           }}
                           className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-bold hover:bg-emerald-200 transition-colors"
