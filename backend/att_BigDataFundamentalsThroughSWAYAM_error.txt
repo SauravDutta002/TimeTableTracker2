@@ -1,0 +1,5 @@
+attendanceMainUrl is not defined
+ReferenceError: attendanceMainUrl is not defined
+    at getFullAttendance (C:\Users\91745\Downloads\TimeTableTracker\backend\cuims\scraper.js:237:29)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async C:\Users\91745\Downloads\TimeTableTracker\backend\routes\data.js:85:28

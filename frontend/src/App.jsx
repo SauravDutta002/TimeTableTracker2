@@ -92,9 +92,36 @@ export default function App() {
     localStorage.setItem("global_target", globalTarget.toString());
   }, [globalTarget]);
 
+  const [loadingFullAttendance, setLoadingFullAttendance] = useState(false);
+
   useEffect(() => {
     localStorage.setItem("active_tab", activeTab);
-  }, [activeTab]);
+    
+    // Fetch full attendance when opening the attendance tab
+    if (activeTab === "attendance" && cuimsToken && cuimsData && !cuimsData.attendance?.fullAttendance && !loadingFullAttendance) {
+      setLoadingFullAttendance(true);
+      fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/attendance/full`, {
+        headers: { "x-session-token": cuimsToken }
+      })
+        .then(r => r.json())
+        .then(res => {
+          if (res.success) {
+            setCuimsData(prev => ({
+              ...prev,
+              attendance: {
+                ...prev.attendance,
+                fullAttendance: res.data
+              }
+            }));
+            localStorage.setItem("cuims_data", JSON.stringify({
+              ...cuimsData,
+              attendance: { ...cuimsData.attendance, fullAttendance: res.data }
+            }));
+          }
+        })
+        .finally(() => setLoadingFullAttendance(false));
+    }
+  }, [activeTab, cuimsToken, cuimsData, loadingFullAttendance]);
 
   useEffect(() => {
     const id = setInterval(() => setNow(new Date()), 1000);
@@ -308,7 +335,7 @@ export default function App() {
               <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between px-2 mb-2">
                   <h3 className="text-sm font-semibold text-emerald-950/80 uppercase tracking-wider flex items-center gap-3">
-                    Your Attendance
+                    {cuimsData?.profile?.name && cuimsData.profile.name !== 'Unknown' ? `${cuimsData.profile.name.split(' ')[0]}'s Attendance` : 'Your Attendance'}
                     <button 
                       onClick={() => setShowFilter(!showFilter)}
                       className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all shadow-sm ${
@@ -357,9 +384,19 @@ export default function App() {
 
                 {Array.isArray(cuimsData?.attendance?.subjects) ? (
                   cuimsData.attendance.subjects.length > 0 ? (
-                    cuimsData.attendance.subjects.map((subj, idx) => (
-                      <AttendanceCard key={subj.EncryptCode || idx} subject={subj} index={idx} targetPercent={globalTarget} />
-                    ))
+                    cuimsData.attendance.subjects.map((subj, idx) => {
+                      const fullRecord = cuimsData.attendance.fullAttendance?.find(f => f.title === subj.Title);
+                      return (
+                        <AttendanceCard 
+                          key={subj.EncryptCode || idx} 
+                          subject={subj} 
+                          index={idx} 
+                          targetPercent={globalTarget} 
+                          fullRecords={fullRecord?.records || null}
+                          isLoadingFull={loadingFullAttendance}
+                        />
+                      );
+                    })
                   ) : (
                     <div className="animate-fade-up rounded-[24px] bg-gradient-to-b from-white/60 to-white/30 p-8 ring-1 ring-emerald-900/5 shadow-sm backdrop-blur-md flex flex-col items-center justify-center text-center">
                       <span className="text-4xl mb-2">📋</span>

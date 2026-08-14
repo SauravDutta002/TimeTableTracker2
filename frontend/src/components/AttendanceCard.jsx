@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export default function AttendanceCard({ subject, index, targetPercent }) {
+export default function AttendanceCard({ subject, index, targetPercent, fullRecords, isLoadingFull }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [simulatedMisses, setSimulatedMisses] = useState(0);
 
@@ -113,6 +113,31 @@ export default function AttendanceCard({ subject, index, targetPercent }) {
             )}
           </div>
         </div>
+        
+        {/* Recent 5 classes indicator dots */}
+        {fullRecords && fullRecords.length > 0 && (
+          <div className="flex flex-col gap-1.5 shrink-0 ml-3 justify-center">
+            {fullRecords.slice(0, 5).map((rec, i) => {
+              const isPresent = rec.AttendanceCode === 'P' || rec.IsPresent || (rec.Status && rec.Status.toLowerCase().includes('present')) || false;
+              
+              // Fade opacity for older classes (i=0 is latest)
+              const opacities = ['opacity-100', 'opacity-80', 'opacity-60', 'opacity-40', 'opacity-25'];
+              const opacityClass = opacities[i] || 'opacity-20';
+              
+              return (
+                <div 
+                  key={i} 
+                  className={`w-2.5 h-2.5 rounded-[4px] shadow-sm transition-all duration-300
+                    ${isPresent ? 'bg-emerald-500' : 'bg-rose-500'} 
+                    ${opacityClass}
+                    ${i === 0 ? `ring-2 ring-offset-1 ${isPresent ? 'ring-emerald-500/40' : 'ring-rose-500/40'} scale-110` : ''}
+                  `} 
+                  title={`${isPresent ? 'Present' : 'Absent'} on ${rec.AttDate || rec.AttendanceDate || rec.Date || 'Unknown Date'} ${i === 0 ? '(Latest)' : ''}`}
+                />
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {isExpanded && (
@@ -138,6 +163,39 @@ export default function AttendanceCard({ subject, index, targetPercent }) {
                   +
                 </button>
               </div>
+            </div>
+
+            {/* Day-wise records */}
+            <div className="mt-2">
+              <span className="text-xs font-semibold text-emerald-950/80 block mb-3">Recent Classes</span>
+              
+              {isLoadingFull ? (
+                <div className="flex justify-center py-4">
+                  <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              ) : fullRecords && fullRecords.length > 0 ? (
+                <div className="flex flex-col gap-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+                  {fullRecords.map((rec, i) => {
+                    const dateStr = rec.AttDate || rec.AttendanceDate || rec.Date || 'Unknown Date';
+                    const isPresent = rec.AttendanceCode === 'P' || rec.IsPresent || (rec.Status && rec.Status.toLowerCase().includes('present')) || false;
+                    
+                    return (
+                      <div key={i} className="flex items-center justify-between py-1.5 px-3 rounded-xl bg-white/50 border border-white/40 shadow-sm">
+                        <span className="text-xs font-medium text-emerald-950/80">{dateStr}</span>
+                        <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${
+                          isPresent ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
+                        }`}>
+                          {isPresent ? 'Present' : 'Absent'}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <span className="text-xs text-emerald-950/50 font-medium">No recent classes recorded.</span>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -209,18 +209,72 @@ async function getAttendance(session) {
  * Fetch day-wise attendance for each subject.
  */
 async function getFullAttendance(session, subjects, reportId, sessionId) {
-  const fullReportUrl =
-    BASE_URL + '/frmStudentCourseWiseAttendanceSummary.aspx/GetFullReport';
-
   const results = [];
+  
+  let attendanceMainUrl = BASE_URL + '/frmStudentAttendanceSummary.aspx';
+  try {
+    if (session.dashHtml) {
+      const cheerio = require('cheerio');
+      const $ = cheerio.load(session.dashHtml);
+      const link = $('a[href*="frmStudentAttendanceSummary.aspx"]').first().attr('href');
+      if (link) {
+        attendanceMainUrl = link.startsWith('http') ? link : BASE_URL + '/' + link.replace(/^\//, '');
+      }
+    }
+    await session.get(attendanceMainUrl);
+  } catch (e) {}
+
   for (const subj of subjects) {
     const encryptCode = subj.EncryptCode || '';
-    const data = `{course:'${encryptCode}',UID:'${reportId}',fromDate:'',toDate:'',type:'All',Session:'${sessionId}'}`;
+    if (!encryptCode) {
+      results.push({ title: subj.Title, records: [] });
+      continue;
+    }
 
     try {
-      const resp = await session.postRaw(fullReportUrl, data);
+      const pageUrl = BASE_URL + `/frmStudentCourseWiseAttendanceSummary.aspx?type=${encodeURIComponent(encryptCode)}`;
+      const pageResp = await session.get(pageUrl, {
+        headers: { Referer: attendanceMainUrl }
+      });
+      
+      const cheerio = require('cheerio');
+      const $page = cheerio.load(pageResp.data);
+      
+      // Extract hidden fields from the specific course page
+      // Often ASP.NET stores these in inputs or script tags.
+      let hiddenCourse = $page('input[name*="course"], input[id*="course"], input[id*="Course"]').val() || '';
+      let hiddenUID = $page('input[name*="UID"], input[id*="UID"]').val() || reportId;
+      let hiddenSession = $page('input[name*="Session"], input[id*="Session"]').val() || sessionId;
+      
+      // Sometimes they are in javascript variables
+      if (!hiddenCourse) {
+         const html = pageResp.data;
+         const courseMatch = html.match(/course\s*:\s*['"]([^'"]+)['"]/);
+         if (courseMatch) hiddenCourse = courseMatch[1];
+         
+         const uidMatch = html.match(/UID\s*:\s*['"]([^'"]+)['"]/);
+         if (uidMatch) hiddenUID = uidMatch[1];
+         
+         const sessionMatch = html.match(/Session\s*:\s*['"]([^'"]+)['"]/);
+         if (sessionMatch) hiddenSession = sessionMatch[1];
+      }
+      
+      // Fallback to encryptCode if we still couldn't find it (unlikely)
+      if (!hiddenCourse) hiddenCourse = encryptCode;
+
+      const fullReportUrl = BASE_URL + '/frmStudentCourseWiseAttendanceSummary.aspx/GetFullReport';
+      const payload = `{course:'${hiddenCourse}',UID:'${hiddenUID}',fromDate:'0',toDate:'0',type:'All',Session:'${hiddenSession}'}`;
+      
+      const resp = await session.postRaw(fullReportUrl, payload, 'application/json', {
+        headers: { Referer: pageUrl }
+      });
+      
       const parsed = JSON.parse(resp.data);
-      const dVal = parsed.d;
+      let dVal = parsed.d;
+      
+      if (dVal && typeof dVal === 'object' && typeof dVal.Result === 'string') {
+        dVal = dVal.Result;
+      }
 
       let records = [];
       if (typeof dVal === 'string') {
@@ -229,15 +283,29 @@ async function getFullAttendance(session, subjects, reportId, sessionId) {
         } catch {
           records = [];
         }
-      } else if (typeof dVal === 'object' && dVal.Result === 'No Data Found') {
-        records = [];
+      } else if (Array.isArray(dVal)) {
+        records = dVal;
+      } else {
+        records = dVal || [];
       }
+      
+      console.log(`\n=== ATTENDANCE FOR: ${subj.Title} ===`);
+      if (records.length > 0) {
+        records.slice(0, 5).forEach((r, idx) => {
+           console.log(`  [${idx+1}] Date: ${r.AttDate}, Status: ${r.AttendanceCode === 'P' ? 'PRESENT' : 'ABSENT'}`);
+        });
+        console.log(`  (Showing first 5 out of ${records.length} records)`);
+      } else {
+        console.log(`  No records found.`);
+      }
+      console.log(`=====================================\n`);
 
       results.push({
         title: subj.Title,
-        records: Array.isArray(records) ? records : [],
+        records: records,
       });
-    } catch {
+    } catch (err) {
+      console.log('[CUIMS] getFullAttendance error for', subj.Title, err.message);
       results.push({ title: subj.Title, records: [] });
     }
   }
