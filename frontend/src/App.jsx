@@ -366,38 +366,7 @@ export default function App() {
                 {showFilter && (
                   <div className="flex flex-col gap-3 bg-white/60 rounded-[20px] px-4 py-4 mb-1 ring-1 ring-emerald-900/10 shadow-sm backdrop-blur-md animate-fade-up">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-semibold text-emerald-950/80">Adjust Minimum Target</span>
-                        <button 
-                          onClick={() => {
-                            if ("Notification" in window) {
-                              Notification.requestPermission().then(permission => {
-                                if (permission === "granted") {
-                                  const title = 'ATTENDANCE UPDATE';
-                                  const options = {
-                                    body: 'Marked Present ✅\nComputer Networks',
-                                    icon: '/icons/icon-192.png'
-                                  };
-                                  if ('serviceWorker' in navigator) {
-                                    navigator.serviceWorker.ready.then(registration => {
-                                      registration.showNotification(title, options);
-                                    }).catch(() => new Notification(title, options));
-                                  } else {
-                                    new Notification(title, options);
-                                  }
-                                } else {
-                                  alert("Please enable notification permissions in your phone settings.");
-                                }
-                              });
-                            } else {
-                              alert("Notifications are not supported on this browser.");
-                            }
-                          }}
-                          className="px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 text-[10px] font-bold hover:bg-emerald-200 transition-colors"
-                        >
-                          Test Ping
-                        </button>
-                      </div>
+                      <span className="text-xs font-semibold text-emerald-950/80">Adjust Minimum Target</span>
                       <div className="flex items-center gap-3 bg-white/80 rounded-full px-1 py-1 shadow-sm ring-1 ring-emerald-900/5">
                         <button 
                           onClick={() => setGlobalTarget(Math.max(50, globalTarget - 1))}
