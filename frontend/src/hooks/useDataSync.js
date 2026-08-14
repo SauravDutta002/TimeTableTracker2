@@ -31,18 +31,17 @@ export default function useDataSync(cuimsToken, cuimsData, setCuimsData, setCuim
           const notifications = diffCuimsData(cuimsData, newData);
           
           if (notifications.length > 0 && Notification.permission === 'granted') {
-            notifications.forEach((msg) => {
-              const title = 'CUIMS Update';
+            notifications.forEach((notif) => {
               const options = {
-                body: msg,
+                body: notif.body,
                 icon: '/icons/icon-192.png',
               };
               if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.ready.then(registration => {
-                  registration.showNotification(title, options);
-                }).catch(() => new Notification(title, options));
+                  registration.showNotification(notif.title, options);
+                }).catch(() => new Notification(notif.title, options));
               } else {
-                new Notification(title, options);
+                new Notification(notif.title, options);
               }
             });
           }

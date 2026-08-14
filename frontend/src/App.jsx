@@ -373,9 +373,9 @@ export default function App() {
                             if ("Notification" in window) {
                               Notification.requestPermission().then(permission => {
                                 if (permission === "granted") {
-                                  const title = 'CUIMS Update';
+                                  const title = 'ATTENDANCE UPDATE';
                                   const options = {
-                                    body: 'Attendance Updated: Marked Present in Computer Networks',
+                                    body: 'Marked Present ✅\nComputer Networks',
                                     icon: '/icons/icon-192.png'
                                   };
                                   if ('serviceWorker' in navigator) {

@@ -30,9 +30,15 @@ export function diffCuimsData(oldData, newData) {
 
       if (delvDiff > 0) {
         if (attdDiff > 0) {
-          notifications.push(`Attendance Updated: Marked Present in ${newSubj.Title}`);
+          notifications.push({
+            title: "ATTENDANCE UPDATE",
+            body: `Marked Present ✅\n${newSubj.Title}`
+          });
         } else {
-          notifications.push(`Attendance Updated: Marked Absent in ${newSubj.Title}`);
+          notifications.push({
+            title: "ATTENDANCE UPDATE",
+            body: `Marked Absent ❌\n${newSubj.Title}`
+          });
         }
       }
     }
@@ -55,14 +61,23 @@ export function diffCuimsData(oldData, newData) {
         newSubj.marks.forEach((newMark) => {
           const oldMark = oldSubj.marks.find((m) => m.element === newMark.element);
           if (!oldMark) {
-            notifications.push(`Marks Uploaded: ${newSubj.name} - ${newMark.element} (${newMark.obtained}/${newMark.total})`);
+            notifications.push({
+              title: "MARKS UPDATE",
+              body: `${newSubj.name} : ${newMark.obtained}/${newMark.total} (${newMark.element})`
+            });
           } else if (oldMark.obtained !== newMark.obtained) {
-            notifications.push(`Marks Updated: ${newSubj.name} - ${newMark.element} changed from ${oldMark.obtained} to ${newMark.obtained}`);
+            notifications.push({
+              title: "MARKS UPDATE",
+              body: `${newSubj.name} : ${newMark.obtained}/${newMark.total} (${newMark.element})`
+            });
           }
         });
       } else {
         // New subject with marks
-        notifications.push(`New Marks Uploaded for ${newSubj.name}`);
+        notifications.push({
+          title: "MARKS UPDATE",
+          body: `New marks for ${newSubj.name}`
+        });
       }
     });
   });
