@@ -160,9 +160,6 @@ async function getAttendance(session) {
   // Dynamically find the attendance URL from the dashboard menu
   let url = BASE_URL + '/frmStudentCourseWiseAttendanceSummary.aspx';
   if (session.dashHtml) {
-    const fs = require('fs');
-    fs.writeFileSync('dash.html', session.dashHtml);
-    
     const $ = cheerio.load(session.dashHtml);
     const link = $('a[href*="frmStudentCourseWiseAttendanceSummary.aspx"]').first().attr('href');
     if (link) {
@@ -187,9 +184,7 @@ async function getAttendance(session) {
   const sessionId = reportMatch ? reportMatch[2] : null;
 
   if (!sessionId || !reportId) {
-    const fs = require('fs');
-    fs.writeFileSync('failed_attendance_page.html', html);
-    console.log('[CUIMS] Failed to find reportId. Saved HTML to failed_attendance_page.html');
+    console.log('[CUIMS] Failed to find reportId.');
     return { subjects: [], sessionId: null, reportId: null };
   }
 

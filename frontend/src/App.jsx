@@ -75,11 +75,14 @@ export default function App() {
   }, [cuimsData, activeSession]);
 
   // Use the auto-sync hook
-  useDataSync(cuimsToken, cuimsData, setCuimsData);
+  useDataSync(cuimsToken, cuimsData, setCuimsData, setCuimsToken);
 
-  const handleCuimsLogin = (token, data) => {
+  const handleCuimsLogin = (token, data, uid, password) => {
     localStorage.setItem("cuims_token", token);
     localStorage.setItem("cuims_data", JSON.stringify(data));
+    if (uid && password) {
+      localStorage.setItem("cuims_creds", JSON.stringify({ uid, password }));
+    }
     setCuimsToken(token);
     setCuimsData(data);
     
@@ -350,6 +353,7 @@ export default function App() {
                     onClick={() => {
                       localStorage.removeItem("cuims_token");
                       localStorage.removeItem("cuims_data");
+                      localStorage.removeItem("cuims_creds");
                       setCuimsToken(null);
                       setCuimsData(null);
                     }}

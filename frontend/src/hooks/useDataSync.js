@@ -5,7 +5,7 @@ import { diffCuimsData } from '../utils/diffing';
 /**
  * Hook to automatically sync data from the backend and trigger notifications.
  */
-export default function useDataSync(cuimsToken, cuimsData, setCuimsData) {
+export default function useDataSync(cuimsToken, cuimsData, setCuimsData, setCuimsToken) {
   const isSyncing = useRef(false);
 
   const syncData = useCallback(async () => {
@@ -40,26 +40,41 @@ export default function useDataSync(cuimsToken, cuimsData, setCuimsData) {
           }
         }
 
-        // Update state and storage if changed
-        // We do a simple stringify check, or just set it
         localStorage.setItem("cuims_data", JSON.stringify(newData));
         setCuimsData(newData);
+      } else {
+        // Session likely expired, attempt auto-login if credentials exist
+        const credsStr = localStorage.getItem("cuims_creds");
+        if (credsStr) {
+          try {
+            const creds = JSON.parse(credsStr);
+            const loginResp = await fetch(`${API_BASE_URL}/api/login`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ uid: creds.uid, password: creds.password })
+            });
+            const loginRes = await loginResp.json();
+            if (loginResp.ok && loginRes.success) {
+              console.log('[Sync] Auto-login successful');
+              localStorage.setItem("cuims_token", loginRes.token);
+              localStorage.setItem("cuims_data", JSON.stringify(loginRes.data));
+              if (setCuimsToken) setCuimsToken(loginRes.token);
+              setCuimsData(loginRes.data);
+            }
+          } catch (autoErr) {
+            console.error('[Sync] Auto-login failed:', autoErr);
+          }
+        }
       }
     } catch (err) {
       console.error('[Sync] Failed to refresh data:', err);
     } finally {
       isSyncing.current = false;
     }
-  }, [cuimsToken, cuimsData, setCuimsData]);
+  }, [cuimsToken, cuimsData, setCuimsData, setCuimsToken]);
 
-  // Poll every 5 minutes (300000 ms)
-  useEffect(() => {
-    if (!cuimsToken) return;
-
-    const intervalId = setInterval(syncData, 300000);
-    
-    return () => clearInterval(intervalId);
-  }, [cuimsToken, syncData]);
+  // Removed the 5-minute interval to be extremely safe with university servers.
+  // Data will now only sync when you open the app (visibilitychange).
 
   // Sync when window becomes visible again
   useEffect(() => {
