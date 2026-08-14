@@ -69,7 +69,7 @@ export default function App() {
   useEffect(() => {
     if (cuimsData?.marks?.sessions?.length && !activeSession) {
       const current = cuimsData.marks.sessions.find(s => s.isCurrent);
-      const withData = cuimsData.marks.sessions.filter(s => cuimsData.marks.data[s.value]?.length > 0);
+      const withData = cuimsData.marks.sessions.filter(s => cuimsData.marks.data?.[s.value]?.length > 0);
       setActiveSession(withData?.[0]?.value || current?.value || cuimsData.marks.sessions[0].value);
     }
   }, [cuimsData, activeSession]);
@@ -78,25 +78,10 @@ export default function App() {
   useDataSync(cuimsToken, cuimsData, setCuimsData);
 
   const handleCuimsLogin = (token, data) => {
-    setCuimsToken(token);
     localStorage.setItem("cuims_token", token);
-    
-    setCuimsData((prevData) => {
-      const mergedData = { ...data };
-      if (prevData) {
-        if (!mergedData.attendance?.subjects?.length && prevData.attendance?.subjects?.length) {
-          mergedData.attendance = prevData.attendance;
-        }
-        if (!mergedData.marks?.sessions?.length && prevData.marks?.sessions?.length) {
-          mergedData.marks = prevData.marks;
-        }
-        if (!mergedData.timetable?.schedule && prevData.timetable?.schedule) {
-          mergedData.timetable = prevData.timetable;
-        }
-      }
-      localStorage.setItem("cuims_data", JSON.stringify(mergedData));
-      return mergedData;
-    });
+    localStorage.setItem("cuims_data", JSON.stringify(data));
+    setCuimsToken(token);
+    setCuimsData(data);
     
     if ("Notification" in window && Notification.permission !== "denied") {
       Notification.requestPermission();
@@ -370,16 +355,22 @@ export default function App() {
                   </div>
                 )}
 
-                {cuimsData?.attendance?.subjects?.length > 0 ? (
-                  cuimsData.attendance.subjects.map((subj, idx) => (
-                    <AttendanceCard key={subj.EncryptCode || idx} subject={subj} index={idx} targetPercent={globalTarget} />
-                  ))
+                {Array.isArray(cuimsData?.attendance?.subjects) ? (
+                  cuimsData.attendance.subjects.length > 0 ? (
+                    cuimsData.attendance.subjects.map((subj, idx) => (
+                      <AttendanceCard key={subj.EncryptCode || idx} subject={subj} index={idx} targetPercent={globalTarget} />
+                    ))
+                  ) : (
+                    <div className="animate-fade-up rounded-[24px] bg-gradient-to-b from-white/60 to-white/30 p-8 ring-1 ring-emerald-900/5 shadow-sm backdrop-blur-md flex flex-col items-center justify-center text-center">
+                      <span className="text-4xl mb-2">📋</span>
+                      <p className="text-sm text-emerald-950/60 font-medium">No attendance records found.</p>
+                    </div>
+                  )
                 ) : (
-                  <div className="animate-fade-up mt-4 rounded-[24px] bg-gradient-to-b from-white/60 to-white/30 p-8 ring-1 ring-emerald-900/5 shadow-sm backdrop-blur-md flex flex-col items-center justify-center text-center">
-                    <span className="text-4xl mb-3">🎓</span>
-                    <p className="text-[13px] text-emerald-950/80 font-bold mb-1">No attendance data found</p>
-                    <p className="text-[11px] text-emerald-950/50 font-medium px-4">
-                      This could be because the semester hasn't started yet, or your university portal is temporarily unavailable. Check the backend console for more details.
+                  <div className="animate-fade-up rounded-[24px] bg-gradient-to-b from-white/60 to-white/30 p-8 ring-1 ring-emerald-900/5 shadow-sm backdrop-blur-md flex flex-col items-center justify-center text-center">
+                    <span className="text-4xl mb-2">⚠️</span>
+                    <p className="text-sm text-emerald-950/60 font-medium">
+                      Attendance data is currently unavailable. The university portal might be down or updating.
                     </p>
                   </div>
                 )}
@@ -430,7 +421,7 @@ export default function App() {
                   </div>
                 )}
 
-                {activeSession && cuimsData?.marks?.data?.[activeSession]?.length > 0 ? (
+                {activeSession && Array.isArray(cuimsData?.marks?.data?.[activeSession]) && cuimsData.marks.data[activeSession].length > 0 ? (
                   <>
                     <PerformanceChart sessionData={cuimsData.marks.data[activeSession]} />
                     {cuimsData.marks.data[activeSession].map((subj, i) => (

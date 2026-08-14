@@ -67,35 +67,58 @@ async function login(uid, password, maxAttempts = 5) {
       const loginResp = await session.postForm(passwordUrl, pwdData);
 
       if ([301, 302, 303, 307, 308].includes(loginResp.status)) {
-        // Success — follow redirect to dashboard
         let dashUrl = loginResp.headers.location || loginResp.headers['Location'];
+        
+        // If it redirects back to the login page, it failed
+        if (dashUrl === '/' || dashUrl.toLowerCase().includes('login')) {
+            const err = new Error('Incorrect UID or password');
+            err.code = 'INCORRECT_CREDENTIALS';
+            throw err;
+        }
+
         if (dashUrl.startsWith('/')) dashUrl = BASE_URL + dashUrl;
-        await session.get(dashUrl);
+        let dashResp = await session.get(dashUrl);
+        
+        // Bypass the "Today's Highlight" landing page to get the real menu
+        if (dashResp.data.includes("Today's Highlight") || dashResp.data.includes('LandingPage.aspx')) {
+            console.log('[CUIMS] Bypassing LandingPage to fetch StudentHome.aspx...');
+            dashResp = await session.get(BASE_URL + '/StudentHome.aspx');
+        }
+
+        // If the resulting dashboard is actually just the login page again
+        if (dashResp.data.includes('txtLoginPassword') || dashResp.data.includes('btnNext')) {
+            const err = new Error('Incorrect UID or password');
+            err.code = 'INCORRECT_CREDENTIALS';
+            throw err;
+        }
+
+        session.dashHtml = dashResp.data; // Save dashboard HTML
         console.log('[CUIMS]   Login successful!');
         return session;
       }
 
       // Status 200 might mean wrong password
       if (loginResp.status === 200) {
-        const $result = cheerio.load(loginResp.data);
-        const pageText = $result.text().toLowerCase();
-        if (
-          pageText.includes('incorrect') ||
-          pageText.includes('invalid') ||
-          pageText.includes('wrong password')
-        ) {
-          if (pageText.includes('captcha')) {
-            // It's a captcha error, let it fall through and retry
+        const htmlString = loginResp.data.toLowerCase();
+        
+        // If we are still on the login page (we can see the login form elements)
+        const isStillLoginPage = htmlString.includes('txtloginpassword') || htmlString.includes('btnlogin') || htmlString.includes('txtuserid');
+
+        if (isStillLoginPage) {
+          if (htmlString.includes('captcha') || htmlString.includes('invalid verification code')) {
+            // It's a captcha error, throw to retry
+            throw new Error('Captcha incorrect');
           } else {
             const err = new Error('Incorrect UID or password');
             err.code = 'INCORRECT_CREDENTIALS';
             throw err;
           }
         }
+        
+        // If it's not the login page, but status is 200, it's very weird, but let's throw an error to be safe if it doesn't look like a success
+        throw new Error('Unexpected 200 response on login');
       }
 
-      // Captcha likely wrong — retry
-      console.log(`[CUIMS]   Attempt ${attempt} failed (status ${loginResp.status}), retrying...`);
     } catch (err) {
       if (err.code === 'INCORRECT_CREDENTIALS') throw err;
       if (attempt === maxAttempts) {
@@ -106,6 +129,10 @@ async function login(uid, password, maxAttempts = 5) {
       console.log(`[CUIMS]   Attempt ${attempt} error: ${err.message}`);
     }
   }
+  
+  const error = new Error(`Login failed: Exceeded maximum attempts`);
+  error.code = 'LOGIN_FAILED';
+  throw error;
 }
 
 /**
@@ -130,9 +157,22 @@ async function getProfile(session) {
  * Returns: { subjects: [...], sessionId, reportId }
  */
 async function getAttendance(session) {
-  const url =
-    BASE_URL +
-    '/frmStudentCourseWiseAttendanceSummary.aspx?type=etgkYfqBdH1fSfc255iYGw==';
+  // Dynamically find the attendance URL from the dashboard menu
+  let url = BASE_URL + '/frmStudentCourseWiseAttendanceSummary.aspx';
+  if (session.dashHtml) {
+    const fs = require('fs');
+    fs.writeFileSync('dash.html', session.dashHtml);
+    
+    const $ = cheerio.load(session.dashHtml);
+    const link = $('a[href*="frmStudentCourseWiseAttendanceSummary.aspx"]').first().attr('href');
+    if (link) {
+      url = link.startsWith('http') ? link : BASE_URL + '/' + link.replace(/^\//, '');
+      console.log(`[CUIMS] Found dynamic attendance URL: ${url}`);
+    } else {
+      console.log(`[CUIMS] Warning: Could not find dynamic attendance link, falling back to default.`);
+    }
+  }
+
   const resp = await session.get(url);
 
   if (resp.data.includes(ERROR_HEAD)) {
@@ -141,12 +181,15 @@ async function getAttendance(session) {
 
   const html = resp.data;
 
-  // Extract report ID and session ID via new regex
-  const reportMatch = html.match(/getReport\('([^']+)',\s*'([^']+)'\)/);
+  // Extract report ID and session ID via robust regex
+  const reportMatch = html.match(/getReport\(['"]([^'"]+)['"],\s*['"]([^'"]+)['"]\)/i);
   const reportId = reportMatch ? reportMatch[1] : null;
   const sessionId = reportMatch ? reportMatch[2] : null;
 
   if (!sessionId || !reportId) {
+    const fs = require('fs');
+    fs.writeFileSync('failed_attendance_page.html', html);
+    console.log('[CUIMS] Failed to find reportId. Saved HTML to failed_attendance_page.html');
     return { subjects: [], sessionId: null, reportId: null };
   }
 
@@ -206,7 +249,19 @@ async function getFullAttendance(session, subjects, reportId, sessionId) {
  * Fetch available sessions and marks for each session.
  */
 async function getMarksAllSessions(session) {
-  const marksUrl = BASE_URL + '/frmStudentMarksView.aspx';
+  // Dynamically find the marks URL from the dashboard menu
+  let marksUrl = BASE_URL + '/frmStudentMarksView.aspx';
+  if (session.dashHtml) {
+    const $ = cheerio.load(session.dashHtml);
+    const link = $('a[href*="frmStudentMarksView.aspx"]').first().attr('href');
+    if (link) {
+      marksUrl = link.startsWith('http') ? link : BASE_URL + '/' + link.replace(/^\//, '');
+      console.log(`[CUIMS] Found dynamic marks URL: ${marksUrl}`);
+    } else {
+      console.log(`[CUIMS] Warning: Could not find dynamic marks link, falling back to default.`);
+    }
+  }
+
   const resp = await session.get(marksUrl);
 
   if (resp.status !== 200 || resp.data.length < 500) {
@@ -364,26 +419,18 @@ async function getTimetable(session) {
 async function fetchAllData(session) {
   // Phase 1: Fetch profile and attendance in parallel
   const [profile, attendanceResult] = await Promise.all([
-    getProfile(session).catch((err) => {
-      console.error('[CUIMS] Profile fetch error:', err.message);
-      return { name: 'Unknown' };
-    }),
-    getAttendance(session).catch((err) => {
-      console.error('[CUIMS] Attendance fetch error:', err.message);
-      return { subjects: [], sessionId: null, reportId: null };
-    }),
+    getProfile(session).catch(() => ({ name: 'Unknown' })),
+    getAttendance(session).catch(() => ({
+      subjects: [],
+      sessionId: null,
+      reportId: null,
+    })),
   ]);
 
   // Phase 2: Fetch marks and timetable in parallel
   const [marks, timetable] = await Promise.all([
-    getMarksAllSessions(session).catch((err) => {
-      console.error('[CUIMS] Marks fetch error:', err.message);
-      return { sessions: [], data: {} };
-    }),
-    getTimetable(session).catch((err) => {
-      console.error('[CUIMS] Timetable fetch error:', err.message);
-      return null;
-    }),
+    getMarksAllSessions(session).catch(() => ({ sessions: [], data: {} })),
+    getTimetable(session).catch(() => null),
   ]);
 
   return {
