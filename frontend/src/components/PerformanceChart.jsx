@@ -46,6 +46,7 @@ function createSlice(cx, cy, radius, startAngle, endAngle) {
 
 export default function PerformanceChart({ sessionData }) {
   const [mounted, setMounted] = useState(false);
+  const [hoveredSubject, setHoveredSubject] = useState(null);
   
   useEffect(() => {
     const timer = setTimeout(() => setMounted(true), 100);
@@ -100,32 +101,68 @@ export default function PerformanceChart({ sessionData }) {
 
   const N = chartData.length;
   const angleStep = 360 / N;
-  const MAX_RADIUS = 75;
+  const MAX_RADIUS = 80;
   const cx = 120;
   const cy = 120;
 
   return (
-    <div className="animate-fade-up rounded-[24px] bg-gradient-to-b from-white/60 to-white/30 p-5 ring-1 ring-emerald-900/5 shadow-sm backdrop-blur-md mb-4 flex flex-col items-center">
-      <div className="w-full flex items-center justify-between mb-2">
-        <h3 className="font-semibold text-sm text-emerald-950 leading-snug">
-          Performance Overview
+    <div className="animate-fade-up glass-card rounded-[32px] p-6 mb-4 flex flex-col items-center relative overflow-hidden">
+      {/* Decorative background glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-40 h-40 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none"></div>
+
+      <div className="w-full flex items-center justify-between mb-4 relative z-10">
+        <h3 className="font-serif italic font-semibold text-xl text-emerald-950/90 tracking-wide">
+          Performance Radar
         </h3>
+        <div className="flex gap-2">
+           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/80 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]"></span>
+        </div>
       </div>
       
-      <div className="relative w-[240px] h-[240px]">
-        <svg viewBox="0 0 240 240" className="w-full h-full drop-shadow-sm">
-          {/* Background guide rings */}
-          <circle cx={cx} cy={cy} r={MAX_RADIUS} fill="none" stroke="rgba(6, 78, 59, 0.08)" strokeWidth="1" />
-          <circle cx={cx} cy={cy} r={MAX_RADIUS * 0.75} fill="none" stroke="rgba(6, 78, 59, 0.05)" strokeWidth="1" strokeDasharray="2 2" />
-          <circle cx={cx} cy={cy} r={MAX_RADIUS * 0.5} fill="none" stroke="rgba(6, 78, 59, 0.05)" strokeWidth="1" strokeDasharray="2 2" />
-          <circle cx={cx} cy={cy} r={MAX_RADIUS * 0.25} fill="none" stroke="rgba(6, 78, 59, 0.05)" strokeWidth="1" strokeDasharray="2 2" />
+      <div className="relative w-[240px] h-[240px] z-10">
+        <svg viewBox="0 0 240 240" className="w-full h-full drop-shadow-sm overflow-visible">
+          <defs>
+            <radialGradient id="radarFill" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="rgba(16, 185, 129, 0.45)" />
+              <stop offset="100%" stopColor="rgba(16, 185, 129, 0.15)" />
+            </radialGradient>
+            <filter id="radarGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="3.5" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+          </defs>
+
+          {/* Background polygonal guide rings */}
+          {[1, 0.75, 0.5, 0.25].map((scale, i) => (
+            <polygon
+              key={`grid-${i}`}
+              points={chartData.map((d, j) => {
+                const angle = j * angleStep;
+                const pos = polarToCartesian(cx, cy, MAX_RADIUS * scale, angle);
+                return `${pos.x},${pos.y}`;
+              }).join(" ")}
+              fill="none"
+              stroke="rgba(6, 78, 59, 0.12)"
+              strokeWidth={scale === 1 ? "1.5" : "1"}
+              strokeDasharray={scale < 1 ? "4 4" : "none"}
+              className="transition-all duration-700 ease-out"
+            />
+          ))}
 
           {/* Spokes (Axes) */}
           {chartData.map((d, i) => {
             const angle = i * angleStep;
             const endPos = polarToCartesian(cx, cy, MAX_RADIUS, angle);
             return (
-              <line key={`spoke-${i}`} x1={cx} y1={cy} x2={endPos.x} y2={endPos.y} stroke="rgba(6, 78, 59, 0.08)" strokeWidth="1" />
+              <line 
+                key={`spoke-${i}`} 
+                x1={cx} 
+                y1={cy} 
+                x2={endPos.x} 
+                y2={endPos.y} 
+                stroke="rgba(6, 78, 59, 0.1)" 
+                strokeWidth="1" 
+              />
             );
           })}
 
@@ -138,10 +175,11 @@ export default function PerformanceChart({ sessionData }) {
               const pos = polarToCartesian(cx, cy, radius, angle);
               return `${pos.x},${pos.y}`;
             }).join(" ")}
-            fill="rgba(16, 185, 129, 0.2)"
+            fill="url(#radarFill)"
             stroke="#10b981"
-            strokeWidth="2"
+            strokeWidth="2.5"
             strokeLinejoin="round"
+            filter="url(#radarGlow)"
             className="transition-all duration-1000 ease-out origin-center"
             style={{ transformOrigin: `${cx}px ${cy}px` }}
           />
@@ -154,22 +192,36 @@ export default function PerformanceChart({ sessionData }) {
             const radius = mounted ? targetRadius : 0;
             const pos = polarToCartesian(cx, cy, radius, angle);
             
-            const labelPos = polarToCartesian(cx, cy, MAX_RADIUS + 18, angle);
+            const labelPos = polarToCartesian(cx, cy, MAX_RADIUS + 24, angle);
             const isLeft = labelPos.x < cx - 5;
             const isRight = labelPos.x > cx + 5;
             let anchor = "middle";
             if (isLeft) anchor = "end";
             if (isRight) anchor = "start";
 
+            const isHovered = hoveredSubject?.id === d.id;
+            const pointRadius = isHovered ? "5" : "3.5";
+
             return (
-              <g key={`point-${d.id}`} className="group cursor-default">
-                {/* Data Point */}
+              <g 
+                key={`point-${d.id}`} 
+                className="group cursor-pointer"
+                onMouseEnter={() => setHoveredSubject(d)}
+                onMouseLeave={() => setHoveredSubject(null)}
+                onTouchStart={() => setHoveredSubject(d)}
+              >
+                {/* Data Point Container for larger hover target */}
+                <circle cx={pos.x} cy={pos.y} r="16" fill="transparent" />
+                
+                {/* Actual Data Point */}
                 <circle 
                   cx={pos.x} 
                   cy={pos.y} 
-                  r="3.5" 
-                  fill={d.fillColor} 
-                  className="transition-all duration-1000 ease-out group-hover:r-[5px] group-hover:fill-emerald-600"
+                  r={pointRadius} 
+                  fill={isHovered ? "#059669" : d.fillColor} 
+                  stroke="#fff"
+                  strokeWidth="1.5"
+                  className="transition-all duration-300 ease-out"
                 />
                 
                 {/* The Subject Label */}
@@ -178,33 +230,43 @@ export default function PerformanceChart({ sessionData }) {
                   y={labelPos.y}
                   textAnchor={anchor}
                   dominantBaseline="middle"
-                  className="text-[9px] font-bold fill-emerald-950/60 transition-all duration-500"
-                  style={{ opacity: mounted ? 1 : 0 }}
+                  className={`text-[10.5px] font-bold transition-all duration-300 ${isHovered ? 'fill-emerald-800 scale-110 font-black' : 'fill-emerald-950/60'}`}
+                  style={{ opacity: mounted ? 1 : 0, transformOrigin: `${labelPos.x}px ${labelPos.y}px` }}
                 >
                   {d.shortName}
-                </text>
-
-                {/* Percentage Tooltip overlay */}
-                <text
-                  x={cx}
-                  y={cy}
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  className="text-[12px] font-black fill-emerald-950 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none bg-white"
-                >
-                  {d.percentage.toFixed(0)}%
                 </text>
               </g>
             );
           })}
         </svg>
+
+        {/* Center Tooltip / Score display */}
+        <div className={`absolute inset-0 flex items-center justify-center pointer-events-none transition-all duration-300 ${hoveredSubject ? 'opacity-100 scale-100' : 'opacity-0 scale-90'}`}>
+          <div className="flex flex-col items-center justify-center bg-white/95 backdrop-blur-md rounded-full w-[76px] h-[76px] shadow-[0_8px_20px_rgba(16,185,129,0.15)] border border-emerald-100/50">
+            <span className="text-[10px] font-bold text-emerald-950/50 leading-tight mb-0.5 px-2 text-center truncate w-full">
+              {hoveredSubject?.shortName}
+            </span>
+            <span className="text-xl font-black text-emerald-950 leading-tight tracking-tight">
+              {hoveredSubject?.percentage.toFixed(0)}%
+            </span>
+          </div>
+        </div>
       </div>
       
       {/* Legend */}
-      <div className="mt-2 flex items-center justify-center gap-4 text-[10px] font-bold text-emerald-950/60 w-full">
-        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald-500"></span>≥ 90%</span>
-        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-amber-400"></span>≥ 75%</span>
-        <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-rose-500"></span>&lt; 75%</span>
+      <div className="mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-[11px] font-bold text-emerald-950/60 w-full z-10">
+        <div className="flex items-center gap-1.5 transition-colors hover:text-emerald-950">
+          <span className="w-2.5 h-2.5 rounded-full bg-[#10b981] shadow-sm border border-black/5"></span>
+          <span>≥ 90%</span>
+        </div>
+        <div className="flex items-center gap-1.5 transition-colors hover:text-emerald-950">
+          <span className="w-2.5 h-2.5 rounded-full bg-[#fbbf24] shadow-sm border border-black/5"></span>
+          <span>≥ 75%</span>
+        </div>
+        <div className="flex items-center gap-1.5 transition-colors hover:text-emerald-950">
+          <span className="w-2.5 h-2.5 rounded-full bg-[#f43f5e] shadow-sm border border-black/5"></span>
+          <span>&lt; 75%</span>
+        </div>
       </div>
     </div>
   );
