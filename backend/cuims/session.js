@@ -78,10 +78,10 @@ class CUIMSSession {
   }
 
   /** POST with raw body string (used for CUIMS JSON-like endpoints) */
-  async postRaw(url, rawBody, contentType = 'application/json') {
+  async postRaw(url, rawBody, contentType = 'application/json', options = {}) {
     return this._request('post', url, {
       data: rawBody,
-      headers: { 'Content-Type': contentType },
+      headers: { 'Content-Type': contentType, ...(options.headers || {}) },
       transformRequest: [(data) => data], // Send string as-is, don't serialize
     });
   }

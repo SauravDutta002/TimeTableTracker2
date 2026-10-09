@@ -156,23 +156,53 @@ async function getProfile(session) {
  * Fetch attendance summary for the current session.
  * Returns: { subjects: [...], sessionId, reportId }
  */
-async function getAttendance(session) {
-  // Dynamically find the attendance URL from the dashboard menu
-  let url = BASE_URL + '/frmStudentCourseWiseAttendanceSummary.aspx';
+const ATTENDANCE_LINK_SEL = 'a[href*="frmStudentCourseWiseAttendanceSummary.aspx"]';
+
+/**
+ * Find the attendance page link. The home page loads its menu via AJAX,
+ * so fall back to calling StudentHome.aspx/DisplaySubjectDetails ourselves.
+ */
+async function findAttendanceUrl(session) {
+  let link = null;
   if (session.dashHtml) {
-    const $ = cheerio.load(session.dashHtml);
-    const link = $('a[href*="frmStudentCourseWiseAttendanceSummary.aspx"]').first().attr('href');
-    if (link) {
-      url = link.startsWith('http') ? link : BASE_URL + '/' + link.replace(/^\//, '');
-      console.log(`[CUIMS] Found dynamic attendance URL: ${url}`);
-    } else {
-      console.log(`[CUIMS] Warning: Could not find dynamic attendance link, falling back to default.`);
+    link = cheerio.load(session.dashHtml)(ATTENDANCE_LINK_SEL).first().attr('href');
+  }
+
+  if (!link) {
+    try {
+      const resp = await session.postRaw(BASE_URL + '/StudentHome.aspx/DisplaySubjectDetails', '{}', 'application/json', {
+        headers: { Referer: BASE_URL + '/StudentHome.aspx', 'X-Requested-With': 'XMLHttpRequest' },
+      });
+      const parsed = typeof resp.data === 'string' ? JSON.parse(resp.data) : resp.data;
+      const menuHtml = typeof parsed.d === 'string' ? parsed.d : JSON.stringify(parsed.d || '');
+      link = cheerio.load(menuHtml)(ATTENDANCE_LINK_SEL).first().attr('href');
+      if (!link) {
+        console.log(`[CUIMS] DisplaySubjectDetails returned no attendance link (status ${resp.status}, ${menuHtml.length} chars).`);
+      }
+    } catch (e) {
+      console.log(`[CUIMS] DisplaySubjectDetails failed: ${e.message}`);
     }
+  }
+
+  if (!link) return null;
+  const url = link.startsWith('http') ? link : BASE_URL + '/' + link.replace(/^\//, '');
+  console.log(`[CUIMS] Found attendance URL: ${url}`);
+  return url;
+}
+
+async function getAttendance(session) {
+  const url = await findAttendanceUrl(session);
+  if (!url) {
+    throw new Error('Could not find attendance page link');
   }
 
   const resp = await session.get(url);
 
-  if (resp.data.includes(ERROR_HEAD)) {
+  const location = String(resp.headers.location || '');
+  if ([301, 302, 303, 307, 308].includes(resp.status) && /error|login/i.test(location)) {
+    throw new Error(`Attendance page redirected to ${location}`);
+  }
+  if (typeof resp.data === 'string' && resp.data.includes(ERROR_HEAD)) {
     throw new Error('UIMS internal error fetching attendance');
   }
 
@@ -195,7 +225,7 @@ async function getAttendance(session) {
   const reportResp = await session.postRaw(reportUrl, jsonData);
 
   const parsed = JSON.parse(reportResp.data);
-  const subjects = JSON.parse(parsed.d);
+  const subjects = typeof parsed.d === 'string' ? JSON.parse(parsed.d) : parsed.d || [];
 
   return { subjects, sessionId, reportId };
 }
@@ -287,7 +317,7 @@ async function getFullAttendance(session, subjects, reportId, sessionId) {
       console.log(`\n=== ATTENDANCE FOR: ${subj.Title} ===`);
       if (records.length > 0) {
         records.slice(0, 5).forEach((r, idx) => {
-           console.log(`  [${idx+1}] Date: ${r.AttDate}, Status: ${r.AttendanceCode === 'P' ? 'PRESENT' : 'ABSENT'}`);
+           console.log(`  [${idx+1}] Date: ${r.AttDate}, Status: ${(r.Status || r.AttendanceCode) === 'P' ? 'PRESENT' : 'ABSENT'}`);
         });
         console.log(`  (Showing first 5 out of ${records.length} records)`);
       } else {
@@ -483,11 +513,10 @@ async function fetchAllData(session) {
   // Phase 1: Fetch profile and attendance in parallel
   const [profile, attendanceResult] = await Promise.all([
     getProfile(session).catch(() => ({ name: 'Unknown' })),
-    getAttendance(session).catch(() => ({
-      subjects: [],
-      sessionId: null,
-      reportId: null,
-    })),
+    getAttendance(session).catch((err) => {
+      console.log('[CUIMS] getAttendance failed:', err.message);
+      return { subjects: [], sessionId: null, reportId: null };
+    }),
   ]);
 
   // Phase 2: Fetch marks and timetable in parallel
