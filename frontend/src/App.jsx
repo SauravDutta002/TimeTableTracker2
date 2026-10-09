@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { DAYS, PEOPLE, PERIODS } from "./data/timetable.js";
 import {
   getStatusAt,
@@ -96,13 +96,21 @@ export default function App() {
   }, [globalTarget]);
 
   const [loadingFullAttendance, setLoadingFullAttendance] = useState(false);
+  const fullTriedKey = useRef(null);
 
   useEffect(() => {
     localStorage.setItem("active_tab", activeTab);
     
-    // Fetch full attendance when opening the attendance tab
+    // Fetch full attendance when opening the attendance tab (once per login/refresh)
     const needsFull = !cuimsData?.attendance?.fullAttendance || cuimsData?.attendance?.fullStale;
-    if (activeTab === "attendance" && cuimsToken && cuimsData && needsFull && !loadingFullAttendance) {
+    const attemptKey = `${cuimsToken}|${cuimsData?.attendance?.subjects?.length}|${cuimsData?.attendance?.fullStale ? 's' : 'f'}`;
+    if (activeTab === "attendance" && cuimsToken && cuimsData && needsFull && !loadingFullAttendance && fullTriedKey.current !== attemptKey) {
+      fullTriedKey.current = attemptKey;
+      const tokenAtStart = cuimsToken;
+      const patch = (prev, extra) =>
+        prev && localStorage.getItem("cuims_token") === tokenAtStart
+          ? { ...prev, attendance: { ...prev.attendance, ...extra } }
+          : prev;
       setLoadingFullAttendance(true);
       fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/attendance/full`, {
         headers: { "x-session-token": cuimsToken }
@@ -110,24 +118,16 @@ export default function App() {
         .then(r => r.json())
         .then(res => {
           if (res.success) {
-            setCuimsData(prev => ({
-              ...prev,
-              attendance: {
-                ...prev.attendance,
-                fullAttendance: res.data,
-                fullStale: false
-              }
-            }));
-            localStorage.setItem("cuims_data", JSON.stringify({
-              ...cuimsData,
-              attendance: { ...cuimsData.attendance, fullAttendance: res.data, fullStale: false }
-            }));
+            setCuimsData(prev => {
+              const next = patch(prev, { fullAttendance: res.data, fullStale: false });
+              if (next && next !== prev) localStorage.setItem("cuims_data", JSON.stringify(next));
+              return next;
+            });
           } else {
-            // Fetch failed: stop retrying this render; keep the previous dots
-            setCuimsData(prev => ({ ...prev, attendance: { ...prev.attendance, fullStale: false } }));
+            setCuimsData(prev => patch(prev, { fullStale: false }));
           }
         })
-        .catch(() => setCuimsData(prev => ({ ...prev, attendance: { ...prev.attendance, fullStale: false } })))
+        .catch(() => setCuimsData(prev => patch(prev, { fullStale: false })))
         .finally(() => setLoadingFullAttendance(false));
     }
   }, [activeTab, cuimsToken, cuimsData, loadingFullAttendance]);
