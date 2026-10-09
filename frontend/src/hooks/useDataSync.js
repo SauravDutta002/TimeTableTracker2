@@ -8,7 +8,7 @@ const hasAttendance = (data) => !!(data && data.attendance && data.attendance.su
 /**
  * Hook to automatically sync data from the backend and trigger notifications.
  */
-export default function useDataSync(cuimsToken, cuimsData, setCuimsData, setCuimsToken) {
+export default function useDataSync(cuimsToken, cuimsData, setCuimsData, setCuimsToken, onUpdated) {
   const isSyncing = useRef(false);
 
   const syncData = useCallback(async () => {
@@ -59,6 +59,7 @@ export default function useDataSync(cuimsToken, cuimsData, setCuimsData, setCuim
 
         localStorage.setItem("cuims_data", JSON.stringify(newData));
         setCuimsData(newData);
+        if (onUpdated) onUpdated();
       } else {
         // Session likely expired, attempt auto-login if credentials exist
         const credsStr = localStorage.getItem("cuims_creds");
@@ -77,6 +78,7 @@ export default function useDataSync(cuimsToken, cuimsData, setCuimsData, setCuim
               localStorage.setItem("cuims_data", JSON.stringify(loginRes.data));
               if (setCuimsToken) setCuimsToken(loginRes.token);
               setCuimsData(loginRes.data);
+              if (onUpdated) onUpdated();
             }
           } catch (autoErr) {
             console.error('[Sync] Auto-login failed:', autoErr);
@@ -88,7 +90,7 @@ export default function useDataSync(cuimsToken, cuimsData, setCuimsData, setCuim
     } finally {
       isSyncing.current = false;
     }
-  }, [cuimsToken, cuimsData, setCuimsData, setCuimsToken]);
+  }, [cuimsToken, cuimsData, setCuimsData, setCuimsToken, onUpdated]);
 
   // Removed the 5-minute interval to be extremely safe with university servers.
   // Data will now only sync when you open the app (visibilitychange).

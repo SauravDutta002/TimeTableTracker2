@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DAYS, PEOPLE, PERIODS } from "./data/timetable.js";
 import {
   getStatusAt,
@@ -75,7 +75,16 @@ export default function App() {
   }, [cuimsData, activeSession]);
 
   // Use the auto-sync hook
-  useDataSync(cuimsToken, cuimsData, setCuimsData, setCuimsToken);
+  const [showUpdatedToast, setShowUpdatedToast] = useState(false);
+  const toastTimer = useRef(null);
+  const handleDataUpdated = useCallback(() => {
+    setShowUpdatedToast(true);
+    clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setShowUpdatedToast(false), 2500);
+  }, []);
+  useEffect(() => () => clearTimeout(toastTimer.current), []);
+
+  useDataSync(cuimsToken, cuimsData, setCuimsData, setCuimsToken, handleDataUpdated);
 
   const handleCuimsLogin = (token, data, uid, password) => {
     localStorage.setItem("cuims_token", token);
@@ -184,6 +193,15 @@ export default function App() {
 
   return (
     <>
+      <div
+        className={`fixed top-3 left-1/2 z-[100] -translate-x-1/2 pointer-events-none rounded-full bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow-lg transition-all duration-300 ${
+          showUpdatedToast ? 'translate-y-0 opacity-100' : '-translate-y-6 opacity-0'
+        }`}
+        role="status"
+        aria-live="polite"
+      >
+        Data updated
+      </div>
       {!hasIdentified && (
         <OTPModal
           onComplete={(identity) => {
