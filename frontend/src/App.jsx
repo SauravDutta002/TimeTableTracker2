@@ -101,7 +101,8 @@ export default function App() {
     localStorage.setItem("active_tab", activeTab);
     
     // Fetch full attendance when opening the attendance tab
-    if (activeTab === "attendance" && cuimsToken && cuimsData && !cuimsData.attendance?.fullAttendance && !loadingFullAttendance) {
+    const needsFull = !cuimsData?.attendance?.fullAttendance || cuimsData?.attendance?.fullStale;
+    if (activeTab === "attendance" && cuimsToken && cuimsData && needsFull && !loadingFullAttendance) {
       setLoadingFullAttendance(true);
       fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000"}/api/attendance/full`, {
         headers: { "x-session-token": cuimsToken }
@@ -113,15 +114,20 @@ export default function App() {
               ...prev,
               attendance: {
                 ...prev.attendance,
-                fullAttendance: res.data
+                fullAttendance: res.data,
+                fullStale: false
               }
             }));
             localStorage.setItem("cuims_data", JSON.stringify({
               ...cuimsData,
-              attendance: { ...cuimsData.attendance, fullAttendance: res.data }
+              attendance: { ...cuimsData.attendance, fullAttendance: res.data, fullStale: false }
             }));
+          } else {
+            // Fetch failed: stop retrying this render; keep the previous dots
+            setCuimsData(prev => ({ ...prev, attendance: { ...prev.attendance, fullStale: false } }));
           }
         })
+        .catch(() => setCuimsData(prev => ({ ...prev, attendance: { ...prev.attendance, fullStale: false } })))
         .finally(() => setLoadingFullAttendance(false));
     }
   }, [activeTab, cuimsToken, cuimsData, loadingFullAttendance]);

@@ -1,5 +1,23 @@
 import { useState } from 'react';
 
+const TOTAL_LEAVES = 10;
+const LEAVE_CODES = ['DL', 'IDL', 'ADL', 'VDL', 'ML', 'OD', 'LV', 'DUTY', 'MEDICAL'];
+
+// 'P' present, 'L' leave (duty/medical), 'A' absent
+function recordStatus(rec) {
+  const code = String(rec.AttendanceCode ?? '').trim().toUpperCase();
+  const text = String(rec.Status ?? rec.Attendance ?? '').toLowerCase();
+  if (LEAVE_CODES.includes(code) || /leave|duty|medical/.test(text)) return 'L';
+  if (code === 'P' || rec.IsPresent || text.includes('present')) return 'P';
+  return 'A';
+}
+
+const STATUS_STYLE = {
+  P: { dot: 'bg-emerald-500', ring: 'ring-emerald-500/40', badge: 'bg-emerald-100 text-emerald-700', label: 'Present' },
+  A: { dot: 'bg-rose-500', ring: 'ring-rose-500/40', badge: 'bg-rose-100 text-rose-700', label: 'Absent' },
+  L: { dot: 'bg-sky-500', ring: 'ring-sky-500/40', badge: 'bg-sky-100 text-sky-700', label: 'Leave' },
+};
+
 export default function AttendanceCard({ subject, index, targetPercent, fullRecords, isLoadingFull }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [simulatedMisses, setSimulatedMisses] = useState(0);
@@ -12,6 +30,16 @@ export default function AttendanceCard({ subject, index, targetPercent, fullReco
   const hasEligible = eligDelv > 0 && !isNaN(eligAttd);
   const delivered = hasEligible ? eligDelv : parseInt(subject.Total_Delv) || 0;
   const attended = hasEligible ? eligAttd : parseInt(subject.Total_Attd) || 0;
+
+  // Leaves used: CUIMS summary counts if present, else leave records from day-wise data
+  const summaryLeaves =
+    (parseInt(subject.DutyLeave_N_P) || 0) +
+    (parseInt(subject.DutyLeave_ADL) || 0) +
+    (parseInt(subject.DutyLeave_Others) || 0) +
+    (parseInt(subject.MedicalLeave) || 0);
+  const recordLeaves = fullRecords ? fullRecords.filter((r) => recordStatus(r) === 'L').length : 0;
+  const leavesUsed = Math.max(summaryLeaves, recordLeaves);
+  const leavesLeft = Math.max(0, TOTAL_LEAVES - leavesUsed);
 
   // Simulated Math
   const simulatedDelivered = delivered + simulatedMisses;
@@ -105,6 +133,10 @@ export default function AttendanceCard({ subject, index, targetPercent, fullReco
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500/80" />
               {attended} attended
             </span>
+            <span className="flex items-center gap-1">
+              <span className="h-1.5 w-1.5 rounded-full bg-sky-500/80" />
+              {leavesLeft}/{TOTAL_LEAVES} leaves left
+            </span>
           </div>
           
           <div className="inline-flex flex-col rounded-lg bg-gradient-to-r from-emerald-900/5 to-transparent py-1 px-2 border-l-2 border-emerald-500">
@@ -123,8 +155,8 @@ export default function AttendanceCard({ subject, index, targetPercent, fullReco
         {fullRecords && fullRecords.length > 0 && (
           <div className="flex flex-col gap-1.5 shrink-0 ml-3 justify-center">
             {fullRecords.slice(0, 5).map((rec, i) => {
-              const isPresent = rec.AttendanceCode === 'P' || rec.IsPresent || (rec.Status && rec.Status.toLowerCase().includes('present')) || false;
-              
+              const st = STATUS_STYLE[recordStatus(rec)];
+
               // Fade opacity for older classes (i=0 is latest)
               const opacities = ['opacity-100', 'opacity-80', 'opacity-60', 'opacity-40', 'opacity-25'];
               const opacityClass = opacities[i] || 'opacity-20';
@@ -133,11 +165,11 @@ export default function AttendanceCard({ subject, index, targetPercent, fullReco
                 <div 
                   key={i} 
                   className={`w-2.5 h-2.5 rounded-[4px] shadow-sm transition-all duration-300
-                    ${isPresent ? 'bg-emerald-500' : 'bg-rose-500'} 
+                    ${st.dot}
                     ${opacityClass}
-                    ${i === 0 ? `ring-2 ring-offset-1 ${isPresent ? 'ring-emerald-500/40' : 'ring-rose-500/40'} scale-110` : ''}
-                  `} 
-                  title={`${isPresent ? 'Present' : 'Absent'} on ${rec.AttDate || rec.AttendanceDate || rec.Date || 'Unknown Date'} ${i === 0 ? '(Latest)' : ''}`}
+                    ${i === 0 ? `ring-2 ring-offset-1 ${st.ring} scale-110` : ''}
+                  `}
+                  title={`${st.label} on ${rec.AttDate || rec.AttendanceDate || rec.Date || 'Unknown Date'} ${i === 0 ? '(Latest)' : ''}`}
                 />
               );
             })}
@@ -182,15 +214,13 @@ export default function AttendanceCard({ subject, index, targetPercent, fullReco
                 <div className="flex flex-col gap-2 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
                   {fullRecords.map((rec, i) => {
                     const dateStr = rec.AttDate || rec.AttendanceDate || rec.Date || 'Unknown Date';
-                    const isPresent = rec.AttendanceCode === 'P' || rec.IsPresent || (rec.Status && rec.Status.toLowerCase().includes('present')) || false;
-                    
+                    const st = STATUS_STYLE[recordStatus(rec)];
+
                     return (
                       <div key={i} className="flex items-center justify-between py-1.5 px-3 rounded-xl bg-white/50 border border-white/40 shadow-sm">
                         <span className="text-xs font-medium text-emerald-950/80">{dateStr}</span>
-                        <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${
-                          isPresent ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
-                        }`}>
-                          {isPresent ? 'Present' : 'Absent'}
+                        <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md ${st.badge}`}>
+                          {st.label}
                         </span>
                       </div>
                     );

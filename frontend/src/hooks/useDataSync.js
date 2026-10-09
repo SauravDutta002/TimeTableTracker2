@@ -28,7 +28,14 @@ export default function useDataSync(cuimsToken, cuimsData, setCuimsData, setCuim
 
       if (response.ok && result.success && hasAttendance(result.data)) {
         const newData = result.data;
-        
+
+        // Keep showing the previous day-wise dots until fresh ones are fetched
+        const oldFull = cuimsData?.attendance?.fullAttendance;
+        if (oldFull && newData.attendance) {
+          newData.attendance.fullAttendance = oldFull;
+          newData.attendance.fullStale = true;
+        }
+
         // Compare with old data
         if (cuimsData) {
           const notifications = diffCuimsData(cuimsData, newData);
