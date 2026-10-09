@@ -25,6 +25,17 @@ function requireSession(sessions) {
 router.get('/refresh', async (req, res) => {
   try {
     const data = await fetchAllData(req.session.cuimsSession);
+
+    // An expired CUIMS session yields empty attendance instead of an error.
+    // Don't overwrite good cached data; reply as failed so the client re-logs in.
+    if (!data.attendance || !data.attendance.subjects || data.attendance.subjects.length === 0) {
+      console.log('[API] /refresh got empty attendance, treating CUIMS session as expired');
+      return res.status(401).json({
+        success: false,
+        error: 'CUIMS session expired. Please login again.',
+      });
+    }
+
     req.session.data = data; // Update cached data
     res.json({ success: true, data });
   } catch (err) {

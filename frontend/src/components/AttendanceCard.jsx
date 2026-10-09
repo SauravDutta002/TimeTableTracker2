@@ -5,8 +5,13 @@ export default function AttendanceCard({ subject, index, targetPercent, fullReco
   const [simulatedMisses, setSimulatedMisses] = useState(0);
 
   const realPercentage = parseFloat(subject.TotalPercentage) || 0;
-  const delivered = parseInt(subject.Total_Delv) || 0;
-  const attended = parseInt(subject.Total_Attd) || 0;
+  // CUIMS computes its official % from the "eligible" counts (raw counts plus
+  // duty/medical leave), so prefer them over the raw Total_Delv/Total_Attd.
+  const eligDelv = parseInt(subject.EligibilityDelivered);
+  const eligAttd = parseInt(subject.EligibilityAttended);
+  const hasEligible = eligDelv > 0 && !isNaN(eligAttd);
+  const delivered = hasEligible ? eligDelv : parseInt(subject.Total_Delv) || 0;
+  const attended = hasEligible ? eligAttd : parseInt(subject.Total_Attd) || 0;
 
   // Simulated Math
   const simulatedDelivered = delivered + simulatedMisses;

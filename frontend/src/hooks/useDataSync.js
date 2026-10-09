@@ -2,6 +2,9 @@ import { useEffect, useCallback, useRef } from 'react';
 import { API_BASE_URL } from '../config';
 import { diffCuimsData } from '../utils/diffing';
 
+// Never replace the last good data with an empty fetch; keep showing the previous attendance.
+const hasAttendance = (data) => !!(data && data.attendance && data.attendance.subjects && data.attendance.subjects.length > 0);
+
 /**
  * Hook to automatically sync data from the backend and trigger notifications.
  */
@@ -23,7 +26,7 @@ export default function useDataSync(cuimsToken, cuimsData, setCuimsData, setCuim
 
       const result = await response.json();
 
-      if (response.ok && result.success) {
+      if (response.ok && result.success && hasAttendance(result.data)) {
         const newData = result.data;
         
         // Compare with old data
@@ -61,7 +64,7 @@ export default function useDataSync(cuimsToken, cuimsData, setCuimsData, setCuim
               body: JSON.stringify({ uid: creds.uid, password: creds.password })
             });
             const loginRes = await loginResp.json();
-            if (loginResp.ok && loginRes.success) {
+            if (loginResp.ok && loginRes.success && hasAttendance(loginRes.data)) {
               console.log('[Sync] Auto-login successful');
               localStorage.setItem("cuims_token", loginRes.token);
               localStorage.setItem("cuims_data", JSON.stringify(loginRes.data));
