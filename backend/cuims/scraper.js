@@ -168,39 +168,49 @@ async function findAttendanceUrl(session) {
     link = cheerio.load(session.dashHtml)(ATTENDANCE_LINK_SEL).first().attr('href');
   }
 
-  if (!link) {
-    try {
-      const resp = await session.postRaw(BASE_URL + '/StudentHome.aspx/DisplaySubjectDetails', '{}', 'application/json', {
-        headers: { Referer: BASE_URL + '/StudentHome.aspx', 'X-Requested-With': 'XMLHttpRequest' },
-      });
-      const parsed = typeof resp.data === 'string' ? JSON.parse(resp.data) : resp.data;
-      const menuHtml = typeof parsed.d === 'string' ? parsed.d : JSON.stringify(parsed.d || '');
-      link = cheerio.load(menuHtml)(ATTENDANCE_LINK_SEL).first().attr('href');
-      if (!link) {
-        console.log(`[CUIMS] DisplaySubjectDetails returned no attendance link (status ${resp.status}, ${menuHtml.length} chars).`);
-      }
-    } catch (e) {
-      console.log(`[CUIMS] DisplaySubjectDetails failed: ${e.message}`);
-    }
-  }
-
   if (!link) return null;
   const url = link.startsWith('http') ? link : BASE_URL + '/' + link.replace(/^\//, '');
   console.log(`[CUIMS] Found attendance URL: ${url}`);
   return url;
 }
 
+/**
+ * Fallback: the home page's "My Course & Attendance" table
+ * (StudentHome.aspx/DisplaySubjectDetails) only has subject, sem and %.
+ */
+async function getHomeSummary(session) {
+  const resp = await session.postRaw(BASE_URL + '/StudentHome.aspx/DisplaySubjectDetails', '{}', 'application/json', {
+    headers: { Referer: BASE_URL + '/StudentHome.aspx', 'X-Requested-With': 'XMLHttpRequest' },
+  });
+  const d = JSON.parse(resp.data).d;
+  const $ = cheerio.load(String(d));
+  const subjects = [];
+  $('table tr').each((_, tr) => {
+    const tds = $(tr).find('td');
+    if (tds.length < 3) return;
+    const pct = parseFloat($(tds[2]).text().trim());
+    subjects.push({
+      Title: $(tds[0]).text().replace(/\s+/g, ' ').trim(),
+      Total_Delv: null,
+      Total_Attd: null,
+      TotalPercentage: isNaN(pct) ? 0 : pct,
+      EncryptCode: '',
+    });
+  });
+  console.log(`[CUIMS] Using home summary fallback (${subjects.length} subjects, no class counts).`);
+  return { subjects, sessionId: null, reportId: null };
+}
+
 async function getAttendance(session) {
   const url = await findAttendanceUrl(session);
-  if (!url) {
-    throw new Error('Could not find attendance page link');
-  }
+  if (!url) return getHomeSummary(session);
 
   const resp = await session.get(url);
 
   const location = String(resp.headers.location || '');
   if ([301, 302, 303, 307, 308].includes(resp.status) && /error|login/i.test(location)) {
-    throw new Error(`Attendance page redirected to ${location}`);
+    console.log(`[CUIMS] Attendance page redirected to ${location}`);
+    return getHomeSummary(session);
   }
   if (typeof resp.data === 'string' && resp.data.includes(ERROR_HEAD)) {
     throw new Error('UIMS internal error fetching attendance');
